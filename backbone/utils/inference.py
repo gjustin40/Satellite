@@ -1,0 +1,1 @@
+def inference_by_patches()

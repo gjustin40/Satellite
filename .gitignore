@@ -1,0 +1,12 @@
+*.log
+*.pth
+*.png
+*.jpg
+*.pth
+*.pyc
+*.ipynb
+*.tif
+*.tiff
+*.sh
+
+backbone/data/*

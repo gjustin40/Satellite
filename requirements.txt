@@ -1,0 +1,17 @@
+easydict
+opencv-python
+numpy
+scipy
+matplotlib
+tqdm
+albumentations
+easydict
+rasterio
+pandas
+geopandas
+shapely
+folium
+ipykernel
+jupyter
+patchify
+torcheval
