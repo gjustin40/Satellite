@@ -24,22 +24,18 @@ class ResNet(BaseModel):
             self.opt.RESUME
         )
 
-        # Metric Function
-
         # Optimizer
         self.optimizer = optim.SGD(self.net.parameters(), lr = self.opt.LR)
 
     def set_input(self, data):
-        self.image = data[0].to(self.device)
-        self.label = data[1].to(self.device)
+        self.image = data[0].to(self.device) # shape : (batch, Channel, H, W)
+        self.label = data[1].to(self.device) # shape : (batch)
+        
 
-        # Sum all of batch from each GPU
-        c = {'count': torch.tensor(self.image.shape[0]).to(self.device)}
-        count_dict = reduce_dict(c, world_size=self.opt.WORLD_SIZE, average=False, cpu=True)
-        # self.count += count_dict['count'].item()
     def forward(self):
-        self.output = self.net(self.image)
+        self.output = self.net(self.image) # probability, shape : (batch, num_classes)
+
 
     def get_loss(self):
         self.loss_fn = nn.CrossEntropyLoss()
-        self.loss = self.loss_fn(self.output, self.label)
+        self.loss = self.loss_fn(self.output, self.label) # shape : (1)

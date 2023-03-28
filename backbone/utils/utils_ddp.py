@@ -15,12 +15,6 @@ def setup_for_distributed(is_master):
 
     __builtin__.print = print
     
-    
-def average_gradients(model, world_size):
-    for param in model.parameters():
-        if param.requires_grad:
-            dist.all_reduce(param.grad.data, op=dist.ReduceOp.SUM)
-            param.grad.data /= world_size
 
 
 def reduce_dict(input_dict, world_size, average=True, cpu=False):   

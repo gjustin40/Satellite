@@ -22,12 +22,16 @@ from models import create_model
 
 opt = {
     'MODEL_NAME': 'resnet18',
+    'TRAIN_BATCH': 4,
+    'VAL_BATCH': 4,
     'NUM_CLASSES': 10,
     'PRETRAINED': False,
     'RESUME': False,
     'LR': 0.01,
     'EPOCH': 4,
-    'VAL_EPOCH': 2
+    'VAL_EPOCH': 2,
+    'LOG_ITER': 50,
+    'BEST_METRIC': 'acc'
 }
 opt = EasyDict(opt)
 
@@ -52,8 +56,8 @@ def get_dataset():
     train_sampler = DistributedSampler(trainset, num_replicas=world_size)
     val_sampler = DistributedSampler(valset, num_replicas=world_size)
 
-    train_loader = torch.utils.data.DataLoader(dataset=trainset, batch_size=64, shuffle=False, num_workers=2, sampler=train_sampler, pin_memory=True)
-    val_loader = torch.utils.data.DataLoader(dataset=valset, batch_size = 64, shuffle=False, num_workers=2, sampler=val_sampler, pin_memory=True)
+    train_loader = torch.utils.data.DataLoader(dataset=trainset, batch_size=opt.TRAIN_BATCH, shuffle=False, num_workers=2, sampler=train_sampler, pin_memory=True)
+    val_loader = torch.utils.data.DataLoader(dataset=valset, batch_size=opt.VAL_BATCH, shuffle=False, num_workers=2, sampler=val_sampler, pin_memory=True)
 
     return train_loader, val_loader
 
@@ -82,19 +86,21 @@ def train(epoch, model, dataloader, logger):
         model.set_input(data)
         model.forward()
         model.backward()
-
-        # loss_avg = model.reduce_loss(idx)
-        # metric_avg = model.metric(idx)
+        current_loss = model.reduce_loss(idx)
+        current_acc = model.reduce_metric(idx)
         
-        # msg = model.create_message(epoch, loss_avg, metric_avg, mode='Train_description')
-        # tbar.set_description(msg)
-        # dist.barrier()
+        msg = model.create_message(epoch, current_loss, current_acc, mode='Train_description')
+        tbar.set_description(msg)
 
-    # if local_rank == 0:
-    #     msg_log = model.create_message(epoch, loss_avg, metric_avg, data_size=data_size, mode='Val_log')
-    #     model.logging(logger, msg_log, mode='val')
+        # if (local_rank == 0) & ((idx+1) % opt.LOG_ITER == 0):
+        #     msg_log = model.create_message(epoch, current_loss, current_acc, data_size=data_size, mode='Train_log')
+
+
+    if local_rank == 0:
+        msg_log = model.create_message(epoch, loss_avg, metric_avg, data_size=data_size, mode='Val_log')
+        model.logging(logger, msg_log, mode='val')
     
-    #     model.save_checkpoint(epoch)
+        model.save_checkpoint(epoch)
 
 @torch.no_grad()
 def val(epoch, model, dataloader, logger):

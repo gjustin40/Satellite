@@ -3,11 +3,12 @@ from abc import ABC, abstractmethod
 
 import torch
 import torch.nn as nn
+import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
-
+from torchmetrics import Accuracy
 import numpy as np
 
-from utils.utils_ddp import reduce_dict, average_gradients 
+# from utils.utils_ddp import reduce_dict
 from .networks import build_network
 
 class BaseModel(ABC):
@@ -35,26 +36,39 @@ class BaseModel(ABC):
         self.optimizer.zero_grad()
         self.get_loss()
         self.loss.backward()
-        average_gradients(self.net, world_size=self.opt.WORLD_SIZE)
         self.optimizer.step()
     
     def reduce_loss(self, idx):
-        losses_ = {'loss': torch.tensor(self.loss.item()).to(self.device)}
-        losses_dict = reduce_dict(losses_, world_size=self.opt.WORLD_SIZE, cpu=True) 
-        self.loss_sum += losses_dict['loss'].item()  # loss sum
-        self.loss_avg = self.loss_sum / (idx+1)
+        dist.all_reduce(self.loss, op=dist.ReduceOp.SUM)
 
-        return self.loss_avg
-    
+        self.iter_loss = self.loss / self.opt.WORLD_SIZE
+        self.epoch_loss += self.iter_loss.cpu()
+
+        return self.epoch_loss / (idx+1)
+
+
+    def reduce_metric(self, idx):
+        predict = torch.argmax(self.output, dim=1) # [0,1,0,0,0,....]
+        accuracy_fn = Accuracy(task='multiclass', num_classes=self.opt.NUM_CLASSES).to(self.device)
+        acc = accuracy_fn(predict, self.label)
+        dist.all_reduce(acc, op=dist.ReduceOp.SUM)
+
+        self.iter_acc = acc / self.opt.WORLD_SIZE
+        self.epoch_acc += self.iter_acc.cpu()
+
+        # return self.epoch_acc / (idx+1)
+        return self.epoch_acc
+
+
     def reset(self):
-        self.count = 0
-        
+        # loss values        
         self.loss = 0
-        self.loss_sum = 0
-        self.loss_avg = 0
+        self.iter_loss = 0
+        self.epoch_loss = 0
         
-        self.metric_sum = 0
-        self.metric_avg = 0
+        # Metric values
+        self.iter_acc = 0
+        self.epoch_acc = 0
         
     
     # @torch.no_grad()
@@ -67,8 +81,9 @@ class BaseModel(ABC):
     #     pass
         
         
-    # def metric(self, idx):
-    #     metrics_ = {'metric_results': torch.tensor(self.metric_fn(self.label.cpu(), self.output.cpu())).to(self.device)}
+    def metric(self, idx):
+        local
+        metrics_ = {'metric_results': torch.tensor(self.metric_fn(self.label.cpu(), self.output.cpu())).to(self.device)}
     #     metrics_dict = reduce_dict(metrics_, world_size=self.opt.WORLD_SIZE, cpu=True) # Reduce from all gpus
     #     self.metric_sum += np.array(metrics_dict['metric_results'])
     #     self.metric_avg = self.metric_sum / (idx+1)
@@ -82,22 +97,20 @@ class BaseModel(ABC):
     #     elif mode == 'val':
     #         logger.val.info(msg)
     
-    # def create_message(self, epoch, loss_avg, metric_avg, data_size=None, mode=None):
-    #     a, b = mode.split('_')
-    #     if b == 'description':
-    #         msg = f'{a} ({epoch+1}) | Loss: {loss_avg:0.6f} |'
-    #         for i, metric in enumerate(['Pre', 'Recall', 'F1', 'IOU']):
-    #             msg += f' {metric}: {metric_avg[i]:0.3f} |'
+    def create_message(self, epoch, loss_avg, metric_avg, data_size=None, mode=None):
+        a, b = mode.split('_')
+        if b == 'description':
+            msg = f'{a} ({epoch+1}) | Loss: {loss_avg:0.6f} | Acc: {metric_avg:0.3f}'
                 
     #     elif b == 'log':
     #         msg = f'{a} ({epoch+1})[{self.count}/{data_size}] | Loss: {loss_avg:0.6f} |'
     #         for i, metric in enumerate(['Pre', 'Recall', 'F1', 'IOU']):
     #             msg += f' {metric}: {metric_avg[i]:0.3f} |'
-    #     return msg
+        return msg
     
-    # def save_checkpoint(self, epoch):
-    #     if self.opt.BEST_SCORE == 'f1':
-    #         score = self.metric_avg[2]
+    def save_checkpoint(self, epoch):
+        if self.opt.BEST_SCORE == 'acc':
+            score = self.metric_avg[2]
     #     elif self.opt.BEST_SCORE == 'iou':
     #         score = self.metric_avg[3]
             

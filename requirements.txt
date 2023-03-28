@@ -14,4 +14,4 @@ folium
 ipykernel
 jupyter
 patchify
-torcheval
+torchmetrics
