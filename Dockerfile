@@ -8,21 +8,8 @@ RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/
 RUN apt-get update && \
     apt-get install -y sudo
 RUN apt-get install -y ffmpeg libsm6 libxext6 wget
-RUN apt-get install -y vim
+RUN apt-get install -y vim git
 
-ARG HOST_UID=1002
-ARG HOST_GID=1002
-RUN groupadd -g ${HOST_GID} nonrootgroup && \
-    useradd -m -s /bin/bash -u ${HOST_UID} -g ${HOST_GID} sakong
-
-RUN usermod -aG sudo sakong && \
-    echo "sakong:sakong" | chpasswd
-RUN echo "sakong ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/sakong
-
-USER sakong
-WORKDIR /
-
-ENV PATH="/home/sakong/.local/bin:${PATH}"
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
