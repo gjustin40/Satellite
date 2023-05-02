@@ -29,5 +29,19 @@ class Logger():
         formatter = logging.Formatter("%(asctime)s - %(filename)s [line:%(lineno)d] - %(levelname)s: %(message)s")
         fh.setFormatter(formatter)
         logger.addHandler(fh)
+        logger.propagate=False
         
         return logger
+
+
+
+def ddp_print(*args, **kwargs):
+    """
+    A custom print function that only prints messages when the rank is 0 in DDP mode.
+    """
+    # Get the current process rank
+    rank = int(os.environ.get("RANK", 0))
+
+    # Only print messages when the rank is 0
+    if rank == 0:
+        print(*args, **kwargs)

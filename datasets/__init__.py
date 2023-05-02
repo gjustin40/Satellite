@@ -43,5 +43,6 @@ def get_dataset(opt):
     val_sampler = DistributedSampler(valset, num_replicas=opt.WORLD_SIZE, drop_last=False)
     train_loader = DataLoader(trainset, batch_size=opt.TRAIN_BATCH, shuffle=False, num_workers=opt.NUM_WORKERS, sampler=train_sampler, pin_memory=True)
     val_loader = DataLoader(valset, batch_size=opt.VAL_BATCH, shuffle=False, num_workers=opt.NUM_WORKERS, sampler=val_sampler, pin_memory=True)
+
     
     return train_loader, val_loader
