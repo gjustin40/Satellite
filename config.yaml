@@ -1,0 +1,29 @@
+EXP:
+  EXP_NAME: remove
+  SAVE_DIR: # default : exp/{EXP_NAME}
+MODEL:
+  MODEL_NAME: UNet
+  NETWORK_NAME: UNet
+  IN_CHANNELS: 4
+  NUM_CLASSES: 1
+  PRETRAINED_PATH: '/home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth'
+DATA:
+  DATASET: spacenet6optical
+  TRAIN_DIR: '/home/yh.sakong/data/preprocessed/optical/train'
+  VAL_DIR: '/home/yh.sakong/data/preprocessed/optical/val'
+  TRAIN_BATCH: 2
+  VAL_BATCH: 1
+  NUM_WORKERS: 0
+INTERVAL:
+  MAX_INTERVAL: 80000
+  VAL_INTERVAL: 10
+  LOG_INTERVAL: 1
+CHECKPOINT:
+  BEST_SCORE: Dice # IoU Dice
+  THRESHOLD: 0.3
+  LOAD_PATH: 
+  RESUME_PATH: 
+OPTIM:
+  LR: 2.e-03
+  WEIGHT_DECAY: 1.e-3
+  

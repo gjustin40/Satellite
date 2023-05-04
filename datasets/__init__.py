@@ -15,8 +15,8 @@ def get_dataset(opt):
     # train_dir = '/home/yh.sakong/data/sn6_building/preprocessed/rgb_png/train'
     # val_dir = '/home/yh.sakong/data/sn6_building/preprocessed/rgb_png/val'
 
-    train_dir = opt.TRAIN_DIR
-    val_dir = opt.VAL_DIR
+    train_dir = opt.DATA.TRAIN_DIR
+    val_dir = opt.DATA.VAL_DIR
 
     transform_train = A.Compose([
         # A.Rotate(limit=40,p=0.5),
@@ -37,12 +37,12 @@ def get_dataset(opt):
         ToTensorV2()])
 
 
-    trainset = datasets_dict[opt.DATASET](train_dir, transform_train)
-    valset = datasets_dict[opt.DATASET](val_dir, transform_val)
+    trainset = datasets_dict[opt.DATA.DATASET](train_dir, transform_train)
+    valset = datasets_dict[opt.DATA.DATASET](val_dir, transform_val)
     train_sampler = DistributedSampler(trainset, num_replicas=opt.WORLD_SIZE, drop_last=False)
     val_sampler = DistributedSampler(valset, num_replicas=opt.WORLD_SIZE, drop_last=False)
-    train_loader = DataLoader(trainset, batch_size=opt.TRAIN_BATCH, shuffle=False, num_workers=opt.NUM_WORKERS, sampler=train_sampler, pin_memory=True)
-    val_loader = DataLoader(valset, batch_size=opt.VAL_BATCH, shuffle=False, num_workers=opt.NUM_WORKERS, sampler=val_sampler, pin_memory=True)
+    train_loader = DataLoader(trainset, batch_size=opt.DATA.TRAIN_BATCH, shuffle=False, num_workers=opt.DATA.NUM_WORKERS, sampler=train_sampler, pin_memory=True)
+    val_loader = DataLoader(valset, batch_size=opt.DATA.VAL_BATCH, shuffle=False, num_workers=opt.DATA.NUM_WORKERS, sampler=val_sampler, pin_memory=True)
 
     
     return train_loader, val_loader

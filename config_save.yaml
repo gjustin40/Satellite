@@ -1,0 +1,63 @@
+EXP: !!python/object/new:easydict.EasyDict
+  state:
+    EXP_NAME: remove
+    SAVE_DIR: null
+  dictitems:
+    EXP_NAME: remove
+    SAVE_DIR: null
+MODEL: !!python/object/new:easydict.EasyDict
+  state:
+    MODEL_NAME: UNet
+    NETWORK_NAME: UNet
+    IN_CHANNELS: 4
+    NUM_CLASSES: 1
+    PRETRAINED_PATH: /home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth
+  dictitems:
+    MODEL_NAME: UNet
+    NETWORK_NAME: UNet
+    IN_CHANNELS: 4
+    NUM_CLASSES: 1
+    PRETRAINED_PATH: /home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth
+DATA: !!python/object/new:easydict.EasyDict
+  state:
+    DATASET: spacenet6optical
+    TRAIN_DIR: /home/yh.sakong/data/preprocessed/optical/train
+    VAL_DIR: /home/yh.sakong/data/preprocessed/optical/val
+    TRAIN_BATCH: 2
+    VAL_BATCH: 1
+    NUM_WORKERS: 0
+  dictitems:
+    DATASET: spacenet6optical
+    TRAIN_DIR: /home/yh.sakong/data/preprocessed/optical/train
+    VAL_DIR: /home/yh.sakong/data/preprocessed/optical/val
+    TRAIN_BATCH: 2
+    VAL_BATCH: 1
+    NUM_WORKERS: 0
+INTERVAL: !!python/object/new:easydict.EasyDict
+  state:
+    MAX_INTERVAL: 80000
+    VAL_INTERVAL: 2000
+    LOG_INTERVAL: 200
+  dictitems:
+    MAX_INTERVAL: 80000
+    VAL_INTERVAL: 2000
+    LOG_INTERVAL: 200
+CHECKPOINT: !!python/object/new:easydict.EasyDict
+  state:
+    BEST_SCORE: Dice
+    THRESHOLD: 0.3
+    LOAD_PATH: null
+    RESUME_PATH: null
+  dictitems:
+    BEST_SCORE: Dice
+    THRESHOLD: 0.3
+    LOAD_PATH: null
+    RESUME_PATH: null
+OPTIM: !!python/object/new:easydict.EasyDict
+  state:
+    LR: 0.002
+    WEIGHT_DECAY: 0.001
+  dictitems:
+    LR: 0.002
+    WEIGHT_DECAY: 0.001
+SAVE_DIR: AAA

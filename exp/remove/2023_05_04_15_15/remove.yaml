@@ -1,0 +1,73 @@
+!!python/object/new:easydict.EasyDict
+dictitems:
+  CHECKPOINT: &id001 !!python/object/new:easydict.EasyDict
+    dictitems:
+      BEST_SCORE: Dice
+      LOAD_PATH: null
+      RESUME_PATH: null
+      THRESHOLD: 0.3
+    state:
+      BEST_SCORE: Dice
+      LOAD_PATH: null
+      RESUME_PATH: null
+      THRESHOLD: 0.3
+  DATA: &id002 !!python/object/new:easydict.EasyDict
+    dictitems:
+      DATASET: spacenet6optical
+      NUM_WORKERS: 0
+      TRAIN_BATCH: 2
+      TRAIN_DIR: /home/yh.sakong/data/preprocessed/optical/train
+      VAL_BATCH: 1
+      VAL_DIR: /home/yh.sakong/data/preprocessed/optical/val
+    state:
+      DATASET: spacenet6optical
+      NUM_WORKERS: 0
+      TRAIN_BATCH: 2
+      TRAIN_DIR: /home/yh.sakong/data/preprocessed/optical/train
+      VAL_BATCH: 1
+      VAL_DIR: /home/yh.sakong/data/preprocessed/optical/val
+  EXP: &id003 !!python/object/new:easydict.EasyDict
+    dictitems:
+      EXP_NAME: remove
+      SAVE_DIR: ./exp/remove/2023_05_04_15_15
+    state:
+      EXP_NAME: remove
+      SAVE_DIR: ./exp/remove/2023_05_04_15_15
+  INTERVAL: &id004 !!python/object/new:easydict.EasyDict
+    dictitems:
+      LOG_INTERVAL: 200
+      MAX_INTERVAL: 80000
+      VAL_INTERVAL: 2000
+    state:
+      LOG_INTERVAL: 200
+      MAX_INTERVAL: 80000
+      VAL_INTERVAL: 2000
+  MODEL: &id005 !!python/object/new:easydict.EasyDict
+    dictitems:
+      IN_CHANNELS: 4
+      MODEL_NAME: UNet
+      NETWORK_NAME: UNet
+      NUM_CLASSES: 1
+      PRETRAINED_PATH: /home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth
+    state:
+      IN_CHANNELS: 4
+      MODEL_NAME: UNet
+      NETWORK_NAME: UNet
+      NUM_CLASSES: 1
+      PRETRAINED_PATH: /home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth
+  OPTIM: &id006 !!python/object/new:easydict.EasyDict
+    dictitems:
+      LR: 0.002
+      WEIGHT_DECAY: 0.001
+    state:
+      LR: 0.002
+      WEIGHT_DECAY: 0.001
+  WORLD_SIZE: 2
+state:
+  CHECKPOINT: *id001
+  DATA: *id002
+  EXP: *id003
+  INTERVAL: *id004
+  MODEL: *id005
+  OPTIM: *id006
+  WORLD_SIZE: 2

@@ -21,7 +21,7 @@ class UNetModel(BaseModel):
         return self.loss_fn(output, label)
 
     def get_metric(self, output, label):
-        pred = (torch.sigmoid(output.cpu()) > self.opt.THRESHOLD).float()
+        pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
         dice_score = self.metric_fn(pred, label.cpu())
         return dice_score
     # def predict(self, output, label)

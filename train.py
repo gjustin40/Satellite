@@ -3,6 +3,8 @@ import glob
 import time 
 import random
 import datetime
+import yaml
+from yaml.loader import SafeLoader
 from easydict import EasyDict
 
 import numpy as np
@@ -16,39 +18,41 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from utils.utils_general import set_random_seeds
 from utils.utils_logging import Logger, ddp_print
-from utils.losses import BCELoss
 from datasets import get_dataset
-from models import UNet
 
 from models import get_model
 
-opt = {
-    'EXP_NAME': 'remove',
-    'MODEL_NAME': 'UNet',
-    'NETWORK_NAME': 'UNet',
-    'IN_CHANNELS': 4,
-    'NUM_CLASSES': 1,
-    'DATASET': 'spacenet6optical',
-    'TRAIN_DIR': '/home/yh.sakong/data/preprocessed/optical/train',
-    'VAL_DIR': '/home/yh.sakong/data/preprocessed/optical/val',
-    'TRAIN_BATCH': 2,
-    'VAL_BATCH': 1,
-    'NUM_WORKERS': 0,
-    'MAX_INTERVAL': 80000,
-    'VAL_INTERVAL': 2000,
-    'LOG_INTERVAL': 200,
-    'BEST_SCORE': 'Dice', # IoU, Dice
-    'THRESHOLD': 0.3,
-    'CHECKPOINT_DIR': '/home/yh.sakong/github/workspace-segmentation/saved_models',
-    'LR': 2e-03,
-    'WEIGHT_DECAY': 1e-3,
-    'PRE_TRAINED': False,
-    'PRETRAINED_PATH': '/home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth',
-    'DISPLAY_N': 4,
-    'RESUME_PATH': '',
-    'CHECKPOINT': '/home/yh.sakong/github/new_workspace/saved_models/uentplusplus_deepglobe_newtrain_best.pth'
-}
-opt = EasyDict(opt)
+# opt = {
+#     'EXP_NAME': 'remove',
+#     'MODEL_NAME': 'UNet',
+#     'NETWORK_NAME': 'UNet',
+#     'SAVE_DIR': None,
+#     'IN_CHANNELS': 4,
+#     'NUM_CLASSES': 1,
+#     'DATASET': 'spacenet6optical',
+#     'TRAIN_DIR': '/home/yh.sakong/data/preprocessed/optical/train',
+#     'VAL_DIR': '/home/yh.sakong/data/preprocessed/optical/val',
+#     'TRAIN_BATCH': 2,
+#     'VAL_BATCH': 1,
+#     'NUM_WORKERS': 0,
+#     'MAX_INTERVAL': 80000,
+#     'VAL_INTERVAL': 2000,
+#     'LOG_INTERVAL': 200,
+#     'BEST_SCORE': 'Dice', # IoU, Dice
+#     'THRESHOLD': 0.3,
+#     'CHECKPOINT_DIR': '/home/yh.sakong/github/workspace-segmentation/saved_models',
+#     'LR': 2e-03,
+#     'WEIGHT_DECAY': 1e-3,
+#     'PRE_TRAINED': False,
+#     'PRETRAINED_PATH': '/home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth',
+#     'DISPLAY_N': 4,
+#     'RESUME_PATH': '',
+#     'CHECKPOINT': '/home/yh.sakong/github/new_workspace/saved_models/uentplusplus_deepglobe_newtrain_best.pth'
+# }
+# opt = EasyDict(opt)
+
+with open("config.yaml", "r") as f:
+    opt = EasyDict(yaml.safe_load(f))
 
 dist.init_process_group("nccl")
 opt.WORLD_SIZE = dist.get_world_size()
@@ -65,13 +69,19 @@ ddp_print('Number of val images: ', len(val_loader.dataset))
 model = get_model(opt)
 # model.load_weights()
 
-optimizer = optim.AdamW(model.net.parameters(), lr=opt.LR)
+optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
 
-t = time.strftime('%Y_%m_%d_%H_%M', time.localtime(time.time()))
-opt.SAVE_DIR = os.path.join('./exp', opt.EXP_NAME, t)
-os.makedirs(opt.SAVE_DIR, exist_ok=True)
-logger = Logger(opt.EXP_NAME, log_path=opt.SAVE_DIR)
-ddp_print(f"Log and Checkpoint will be saved '{opt.SAVE_DIR}' \n")
+if rank == 0:
+    t = time.strftime('%Y_%m_%d_%H_%M', time.localtime(time.time()))
+    opt.EXP.SAVE_DIR = os.path.join('./exp', opt.EXP.EXP_NAME, t)
+    os.makedirs(opt.EXP.SAVE_DIR, exist_ok=True)
+    logger = Logger(opt.EXP.EXP_NAME, log_path=opt.EXP.SAVE_DIR)
+    with open(f"{opt.EXP.SAVE_DIR}/{opt.EXP.EXP_NAME}.yaml", "w") as f:
+        yaml.dump(dict(opt), f)
+
+    print(f"Log and Checkpoint will be saved '{opt.EXP.SAVE_DIR}' \n")
+
+dist.barrier()
 
 def main():
     
@@ -79,7 +89,7 @@ def main():
     dice_avg = 0
     interval = 0
     generator = iter(train_loader) # Iteration based
-    while interval < opt.MAX_INTERVAL:
+    while interval < opt.INTERVAL.MAX_INTERVAL:
         try:
             interval += 1
             current_lr = model.get_lr(optimizer)
@@ -106,10 +116,10 @@ def main():
             dist.barrier()
             if rank == 0:
                 ###################### Logging ######################
-                if (((interval % opt.LOG_INTERVAL) == 0) or (interval == opt.MAX_INTERVAL)):
+                if (((interval % opt.INTERVAL.LOG_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
 
                     msg = (
-                        f'[{interval:6d}/{opt.MAX_INTERVAL}] | '
+                        f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                         f'LR: {current_lr:0.8e} | '
                         f'Loss: {loss_avg/interval:0.4f} | '
                         f'Dice: {dice_avg/interval:0.4f} |'
@@ -118,7 +128,7 @@ def main():
                     logger.train.info(msg)
 
             ###################### Validation ######################
-            if (((interval % opt.VAL_INTERVAL) == 0) or (interval == opt.MAX_INTERVAL)):
+            if (((interval % opt.INTERVAL.VAL_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
                 dist.barrier()
 
                 with torch.no_grad():
@@ -144,7 +154,7 @@ def main():
                         if rank == 0:
                             ###################### Logging ######################
                             msg = (
-                                f'[{interval:6d}/{opt.MAX_INTERVAL}] | '
+                                f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                                 f'Validation | '
                                 f'Dice: {dice_avg_val/idx:0.4f} |'
                             )

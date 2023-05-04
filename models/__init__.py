@@ -23,5 +23,5 @@ def find_model_using_name(model_name):
     return model
 
 def get_model(opt):
-    return find_model_using_name(opt.MODEL_NAME)(opt)
+    return find_model_using_name(opt.MODEL.MODEL_NAME)(opt)
     

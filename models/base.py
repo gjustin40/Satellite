@@ -39,9 +39,9 @@ class BaseModel(ABC):
 
     def _get_network(self):
         net = get_network(
-            network_name=self.opt.NETWORK_NAME,
-            in_channels=self.opt.IN_CHANNELS,
-            num_classes=self.opt.NUM_CLASSES
+            network_name=self.opt.MODEL.NETWORK_NAME,
+            in_channels=self.opt.MODEL.IN_CHANNELS,
+            num_classes=self.opt.MODEL.NUM_CLASSES
         )
         # net.apply(self._init_weights)
 
@@ -85,22 +85,22 @@ class BaseModel(ABC):
         }
 
         # Last Checkpoint Save
-        checkpoint_path = os.path.join(self.opt.SAVE_DIR, 'last.pth')
+        checkpoint_path = os.path.join(self.opt.EXP.SAVE_DIR, 'last.pth')
         torch.save(state, checkpoint_path)
 
         # Best Score Save
         if self.best < score:
             checkpoint_path = os.path.join(
-                self.opt.SAVE_DIR,
-                f'best_{interval}_{self.opt.BEST_SCORE}_{score:0.4f}.pth'
+                self.opt.EXP.SAVE_DIR,
+                f'best_{interval}_{self.opt.CHECKPOINT.BEST_SCORE}_{score:0.4f}.pth'
             )
             torch.save(state, checkpoint_path)
             if self.best_checkpoint is not None:
                 os.remove(self.best_checkpoint)
 
             print(
-                f"Save Checkpoint '{self.opt.SAVE_DIR}' | "
-                f"Metric : {self.opt.BEST_SCORE} | "
+                f"Save Checkpoint '{self.opt.EXP.SAVE_DIR}' | "
+                f"Metric : {self.opt.CHECKPOINT.BEST_SCORE} | "
                 f"{self.best:0.4f} -> {score:0.4f}\n"
             )
 
