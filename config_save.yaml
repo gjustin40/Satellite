@@ -36,12 +36,12 @@ DATA: !!python/object/new:easydict.EasyDict
 INTERVAL: !!python/object/new:easydict.EasyDict
   state:
     MAX_INTERVAL: 80000
-    VAL_INTERVAL: 2000
-    LOG_INTERVAL: 200
+    VAL_INTERVAL: 10
+    LOG_INTERVAL: 1
   dictitems:
     MAX_INTERVAL: 80000
-    VAL_INTERVAL: 2000
-    LOG_INTERVAL: 200
+    VAL_INTERVAL: 10
+    LOG_INTERVAL: 1
 CHECKPOINT: !!python/object/new:easydict.EasyDict
   state:
     BEST_SCORE: Dice
