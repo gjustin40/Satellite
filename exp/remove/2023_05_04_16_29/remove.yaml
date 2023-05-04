@@ -1,6 +1,6 @@
 EXP:
   EXP_NAME: remove
-  SAVE_DIR: null
+  SAVE_DIR: ./exp/remove/2023_05_04_16_29
 MODEL:
   MODEL_NAME: UNet
   NETWORK_NAME: UNet
@@ -26,3 +26,4 @@ CHECKPOINT:
 OPTIM:
   LR: 0.002
   WEIGHT_DECAY: 0.001
+WORLD_SIZE: 2

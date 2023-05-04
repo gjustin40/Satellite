@@ -3,6 +3,7 @@ import glob
 import time 
 import random
 import datetime
+import argparse
 import yaml
 from yaml.loader import SafeLoader
 from easydict import EasyDict
@@ -22,64 +23,50 @@ from datasets import get_dataset
 
 from models import get_model
 
-# opt = {
-#     'EXP_NAME': 'remove',
-#     'MODEL_NAME': 'UNet',
-#     'NETWORK_NAME': 'UNet',
-#     'SAVE_DIR': None,
-#     'IN_CHANNELS': 4,
-#     'NUM_CLASSES': 1,
-#     'DATASET': 'spacenet6optical',
-#     'TRAIN_DIR': '/home/yh.sakong/data/preprocessed/optical/train',
-#     'VAL_DIR': '/home/yh.sakong/data/preprocessed/optical/val',
-#     'TRAIN_BATCH': 2,
-#     'VAL_BATCH': 1,
-#     'NUM_WORKERS': 0,
-#     'MAX_INTERVAL': 80000,
-#     'VAL_INTERVAL': 2000,
-#     'LOG_INTERVAL': 200,
-#     'BEST_SCORE': 'Dice', # IoU, Dice
-#     'THRESHOLD': 0.3,
-#     'CHECKPOINT_DIR': '/home/yh.sakong/github/workspace-segmentation/saved_models',
-#     'LR': 2e-03,
-#     'WEIGHT_DECAY': 1e-3,
-#     'PRE_TRAINED': False,
-#     'PRETRAINED_PATH': '/home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth',
-#     'DISPLAY_N': 4,
-#     'RESUME_PATH': '',
-#     'CHECKPOINT': '/home/yh.sakong/github/new_workspace/saved_models/uentplusplus_deepglobe_newtrain_best.pth'
-# }
-# opt = EasyDict(opt)
+# Read YAML File
+parser = argparse.ArgumentParser(description='Train a segmentor')
+parser.add_argument('config', help='train config file path')
+args = parser.parse_args()
+with open(args.config, "r") as f:
+    opt = yaml.safe_load(f)
 
-with open("config.yaml", "r") as f:
-    opt = EasyDict(yaml.safe_load(f))
-
+# Set DDP
 dist.init_process_group("nccl")
-opt.WORLD_SIZE = dist.get_world_size()
-rank = dist.get_rank()
-torch.cuda.set_device(rank)
-ddp_print('Number of GPUs : ', opt.WORLD_SIZE)
+WORLD_SIZE = dist.get_world_size()
+RANK = dist.get_rank()
+torch.cuda.set_device(RANK)
+ddp_print('Number of GPUs : ', WORLD_SIZE)
+opt['WORLD_SIZE'] = WORLD_SIZE
 
+# Make directory and logger for save Result
+t = time.strftime('%Y_%m_%d_%H_%M', time.localtime(time.time()))
+SAVE_DIR = os.path.join('./exp', opt['EXP']['EXP_NAME'], t)
+opt['EXP']['SAVE_DIR'] = SAVE_DIR
+
+if RANK == 0:
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    logger = Logger(opt['EXP']['EXP_NAME'], log_path=SAVE_DIR)
+    with open(f'{SAVE_DIR}/{opt["EXP"]["EXP_NAME"]}.yaml', 'w') as f:
+        yaml.dump(opt, f, sort_keys=False)
+        
+    print(f"Log and Checkpoint will be saved '{SAVE_DIR}' \n")
+
+# Set configs as EasyDict
+opt = EasyDict(opt)
+
+# Set random seeds
 set_random_seeds(random_seed=40)
 
+# Get DataLoader
 train_loader, val_loader = get_dataset(opt)
 ddp_print('Number of train images: ', len(train_loader.dataset))
 ddp_print('Number of val images: ', len(val_loader.dataset))
 
+# Get Model
 model = get_model(opt)
-# model.load_weights()
 
+# Get Optimizers
 optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
-
-if rank == 0:
-    t = time.strftime('%Y_%m_%d_%H_%M', time.localtime(time.time()))
-    opt.EXP.SAVE_DIR = os.path.join('./exp', opt.EXP.EXP_NAME, t)
-    os.makedirs(opt.EXP.SAVE_DIR, exist_ok=True)
-    logger = Logger(opt.EXP.EXP_NAME, log_path=opt.EXP.SAVE_DIR)
-    with open(f"{opt.EXP.SAVE_DIR}/{opt.EXP.EXP_NAME}.yaml", "w") as f:
-        yaml.dump(dict(opt), f)
-
-    print(f"Log and Checkpoint will be saved '{opt.EXP.SAVE_DIR}' \n")
 
 dist.barrier()
 
@@ -97,7 +84,7 @@ def main():
             model.train()
 
             data = next(generator)
-            image, label = data['image'].to(rank), data['label'].to(rank)
+            image, label = data['image'].to(RANK), data['label'].to(RANK)
             output = model.forward(image)
 
             optimizer.zero_grad()
@@ -109,12 +96,12 @@ def main():
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
             dice_s = model.get_metric(output, label)
-            dice_s_sum = torch.tensor(dice_s, device=rank, dtype=torch.float)
+            dice_s_sum = torch.tensor(dice_s, device=RANK, dtype=torch.float)
             dist.all_reduce(dice_s_sum, op=dist.ReduceOp.SUM)
             dice_avg += (dice_s_sum.item() / opt.WORLD_SIZE)
 
             dist.barrier()
-            if rank == 0:
+            if RANK == 0:
                 ###################### Logging ######################
                 if (((interval % opt.INTERVAL.LOG_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
 
@@ -134,7 +121,7 @@ def main():
                 with torch.no_grad():
                     model.eval()
 
-                    if rank == 0:
+                    if RANK == 0:
                         tbar = tqdm(val_loader, dynamic_ncols=True, desc="Validation")
                     else:
                         tbar = val_loader
@@ -142,16 +129,16 @@ def main():
                     dice_avg_val = 0
                     dice_avg_val2 = 0
                     for idx, data in enumerate(tbar, start=1):
-                        image, label = data['image'].to(rank), data['label'].to(rank)
+                        image, label = data['image'].to(RANK), data['label'].to(RANK)
                         output = model.forward(image)
 
                         batch = image.shape[0]
                         dice_s = model.get_metric(output, label)
-                        dice_s_sum = torch.tensor(dice_s, device=rank, dtype=torch.float)
+                        dice_s_sum = torch.tensor(dice_s, device=RANK, dtype=torch.float)
                         dist.all_reduce(dice_s_sum, op=dist.ReduceOp.SUM)
                         dice_avg_val += ((dice_s_sum.item() / opt.WORLD_SIZE))
 
-                        if rank == 0:
+                        if RANK == 0:
                             ###################### Logging ######################
                             msg = (
                                 f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
@@ -162,7 +149,7 @@ def main():
                             if idx == len(val_loader):
                                 logger.val.info(msg)                 
                     
-                    if rank == 0:
+                    if RANK == 0:
                         score = dice_avg_val/idx
                         model.save_checkpoint(interval, score)
 
