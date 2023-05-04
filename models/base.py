@@ -1,21 +1,21 @@
 import os
 from abc import ABC, abstractmethod
 
-# import torch
+import torch
 import torch.nn as nn
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-# import numpy as np
-
-# from utils.utils_ddp import reduce_dict, average_gradients 
 from .networks import get_network
+
 
 class BaseModel(ABC):
     def __init__(self, opt):
         self.opt = opt
         self.rank = dist.get_rank()
 
+        self.best = 0
+        self.best_checkpoint = None
 
     @abstractmethod
     def forward(self, image):
@@ -76,3 +76,33 @@ class BaseModel(ABC):
     def get_lr(self, optimizer):
         for param_group in optimizer.param_groups:
             return param_group['lr']
+
+    def save_checkpoint(self, interval, score):
+        state = {
+            'state_dict': self.net.module.state_dict(),
+            'Dice': round(score, 4),
+            'iter': interval,
+        }
+
+        # Last Checkpoint Save
+        checkpoint_path = os.path.join(self.opt.SAVE_DIR, 'last.pth')
+        torch.save(state, checkpoint_path)
+
+        # Best Score Save
+        if self.best < score:
+            checkpoint_path = os.path.join(
+                self.opt.SAVE_DIR,
+                f'best_{interval}_{self.opt.BEST_SCORE}_{score:0.4f}.pth'
+            )
+            torch.save(state, checkpoint_path)
+            if self.best_checkpoint is not None:
+                os.remove(self.best_checkpoint)
+
+            print(
+                f"Save Checkpoint '{self.opt.SAVE_DIR}' | "
+                f"Metric : {self.opt.BEST_SCORE} | "
+                f"{self.best:0.4f} -> {score:0.4f}\n"
+            )
+
+            self.best_checkpoint = checkpoint_path
+            self.best = score

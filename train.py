@@ -36,7 +36,7 @@ opt = {
     'NUM_WORKERS': 0,
     'MAX_INTERVAL': 80000,
     'VAL_INTERVAL': 2000,
-    'LOG_INTERVAL': 100,
+    'LOG_INTERVAL': 200,
     'BEST_SCORE': 'Dice', # IoU, Dice
     'THRESHOLD': 0.3,
     'CHECKPOINT_DIR': '/home/yh.sakong/github/workspace-segmentation/saved_models',
@@ -63,6 +63,7 @@ ddp_print('Number of train images: ', len(train_loader.dataset))
 ddp_print('Number of val images: ', len(val_loader.dataset))
 
 model = get_model(opt)
+# model.load_weights()
 
 optimizer = optim.AdamW(model.net.parameters(), lr=opt.LR)
 
@@ -129,25 +130,31 @@ def main():
                         tbar = val_loader
                     
                     dice_avg_val = 0
-                    for idx, data in enumerate(tbar):
+                    dice_avg_val2 = 0
+                    for idx, data in enumerate(tbar, start=1):
                         image, label = data['image'].to(rank), data['label'].to(rank)
                         output = model.forward(image)
 
+                        batch = image.shape[0]
                         dice_s = model.get_metric(output, label)
                         dice_s_sum = torch.tensor(dice_s, device=rank, dtype=torch.float)
                         dist.all_reduce(dice_s_sum, op=dist.ReduceOp.SUM)
-                        dice_avg_val += (dice_s_sum.item() / opt.WORLD_SIZE)
+                        dice_avg_val += ((dice_s_sum.item() / opt.WORLD_SIZE))
 
                         if rank == 0:
                             ###################### Logging ######################
                             msg = (
                                 f'[{interval:6d}/{opt.MAX_INTERVAL}] | '
                                 f'Validation | '
-                                f'Dice: {dice_avg_val/(idx+1):0.4f} |'
+                                f'Dice: {dice_avg_val/idx:0.4f} |'
                             )
                             tbar.set_description(msg)
-                            if (idx+1) == len(val_loader):
+                            if idx == len(val_loader):
                                 logger.val.info(msg)                 
+                    
+                    if rank == 0:
+                        score = dice_avg_val/idx
+                        model.save_checkpoint(interval, score)
 
         except StopIteration:
             train_loader.sampler.set_epoch(interval)
