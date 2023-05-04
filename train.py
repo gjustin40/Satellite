@@ -23,14 +23,14 @@ from datasets import get_dataset
 
 from models import get_model
 
-# Read YAML File
+#################### Read YAML File ####################
 parser = argparse.ArgumentParser(description='Train a segmentor')
 parser.add_argument('config', help='train config file path')
 args = parser.parse_args()
 with open(args.config, "r") as f:
     opt = yaml.safe_load(f)
 
-# Set DDP
+#################### Set DDP ####################
 dist.init_process_group("nccl")
 WORLD_SIZE = dist.get_world_size()
 RANK = dist.get_rank()
@@ -38,7 +38,7 @@ torch.cuda.set_device(RANK)
 ddp_print('Number of GPUs : ', WORLD_SIZE)
 opt['WORLD_SIZE'] = WORLD_SIZE
 
-# Make directory and logger for save Result
+#################### Make directory and logger for save Result ####################
 t = time.strftime('%Y_%m_%d_%H_%M', time.localtime(time.time()))
 SAVE_DIR = os.path.join('./exp', opt['EXP']['EXP_NAME'], t)
 opt['EXP']['SAVE_DIR'] = SAVE_DIR
@@ -51,25 +51,24 @@ if RANK == 0:
         
     print(f"Log and Checkpoint will be saved '{SAVE_DIR}' \n")
 
-# Set configs as EasyDict
+#################### Set configs as EasyDict ####################
 opt = EasyDict(opt)
 
-# Set random seeds
+#################### Set random seeds ####################
 set_random_seeds(random_seed=40)
 
-# Get DataLoader
+#################### Get DataLoader ####################
 train_loader, val_loader = get_dataset(opt)
 ddp_print('Number of train images: ', len(train_loader.dataset))
 ddp_print('Number of val images: ', len(val_loader.dataset))
 
-# Get Model
+#################### Get Model ####################
 model = get_model(opt)
 
-# Get Optimizers
+#################### Get Optimizers ####################
 optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
 
 dist.barrier()
-
 def main():
     
     loss_avg = 0
