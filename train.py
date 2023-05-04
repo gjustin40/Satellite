@@ -17,7 +17,7 @@ import torch.optim as optim
 import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from utils.utils_general import set_random_seeds
+from utils.utils_general import set_random_seeds, running_time
 from utils.utils_logging import Logger, ddp_print
 from datasets import get_dataset
 
@@ -70,13 +70,15 @@ optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
 
 dist.barrier()
 def main():
-    
+    timer = running_time(opt.INTERVAL.MAX_INTERVAL)
+
     loss_avg = 0
     dice_avg = 0
     interval = 0
     generator = iter(train_loader) # Iteration based
     while interval < opt.INTERVAL.MAX_INTERVAL:
         try:
+
             interval += 1
             current_lr = model.get_lr(optimizer)
             ###################### Train ######################
@@ -103,15 +105,21 @@ def main():
             if RANK == 0:
                 ###################### Logging ######################
                 if (((interval % opt.INTERVAL.LOG_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
+                    timer.end_t = time.time()
+                    interval_time, eta = timer.predict(interval)
 
                     msg = (
                         f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                         f'LR: {current_lr:0.8e} | '
                         f'Loss: {loss_avg/interval:0.4f} | '
-                        f'Dice: {dice_avg/interval:0.4f} |'
+                        f'Dice: {dice_avg/interval:0.4f} | '
+                        f'Time: {interval_time} | '
+                        f'ETA: {eta}'
                     )
                     print(msg)
                     logger.train.info(msg)
+                    
+                    timer.start_t = time.time()
 
             ###################### Validation ######################
             if (((interval % opt.INTERVAL.VAL_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
@@ -151,6 +159,8 @@ def main():
                     if RANK == 0:
                         score = dice_avg_val/idx
                         model.save_checkpoint(interval, score)
+
+                timer.start_t = time.time()
 
         except StopIteration:
             train_loader.sampler.set_epoch(interval)

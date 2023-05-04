@@ -1,8 +1,12 @@
 import random
+import time
+import math
+from datetime import timedelta
+
 import torch
 import numpy as np
-import math
 from torch.optim.lr_scheduler import _LRScheduler
+
 
 def set_random_seeds(random_seed=40):
 
@@ -12,7 +16,33 @@ def set_random_seeds(random_seed=40):
     random.seed(random_seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
-    
+
+
+
+
+class running_time():
+    def __init__(self, max_interval):
+        self.start_t = time.time()
+        self.end_t = None
+
+        self.max_interval = max_interval
+        self.total_interval_time = 0
+
+    def predict(self, interval):
+        interval_time = round(self.end_t - self.start_t, 2)
+        self.total_interval_time += interval_time
+
+        interval_time = timedelta(seconds=interval_time)
+        interval_time = timedelta(seconds=interval_time.seconds, microseconds=0)
+        avg_interval_time = self.total_interval_time / interval
+
+        remain_interval = self.max_interval - interval
+        remain_interval_time = round(avg_interval_time * remain_interval, 2)
+        remain_interval_time = timedelta(seconds=remain_interval_time)
+        remain_interval_time = timedelta(seconds=remain_interval_time.seconds, microseconds=0)
+
+
+        return interval_time, remain_interval_time
 
 
 class CosineAnnealingWarmUpRestarts(_LRScheduler):
@@ -69,3 +99,5 @@ class CosineAnnealingWarmUpRestarts(_LRScheduler):
         self.last_epoch = math.floor(epoch)
         for param_group, lr in zip(self.optimizer.param_groups, self.get_lr()):
             param_group['lr'] = lr
+
+
