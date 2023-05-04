@@ -34,13 +34,13 @@ opt = {
     'TRAIN_BATCH': 2,
     'VAL_BATCH': 1,
     'NUM_WORKERS': 0,
-    'MAX_INTERVAL': 4000,
-    'VAL_INTERVAL': 10,
-    'LOG_INTERVAL': 1,
+    'MAX_INTERVAL': 80000,
+    'VAL_INTERVAL': 2000,
+    'LOG_INTERVAL': 100,
     'BEST_SCORE': 'Dice', # IoU, Dice
     'THRESHOLD': 0.3,
     'CHECKPOINT_DIR': '/home/yh.sakong/github/workspace-segmentation/saved_models',
-    'LR': 2e-05,
+    'LR': 2e-03,
     'WEIGHT_DECAY': 1e-3,
     'PRE_TRAINED': False,
     'PRETRAINED_PATH': '/home/yh.sakong/github/distillation/pretrained/beit_large_patch16_224_pt22k_ft22k.pth',
@@ -105,9 +105,10 @@ def main():
             dist.barrier()
             if rank == 0:
                 ###################### Logging ######################
-                if ((interval % opt.LOG_INTERVAL) == 0 or opt.MAX_INTERVAL):
+                if (((interval % opt.LOG_INTERVAL) == 0) or (interval == opt.MAX_INTERVAL)):
+
                     msg = (
-                        f'[{interval}/{opt.MAX_INTERVAL}] | '
+                        f'[{interval:6d}/{opt.MAX_INTERVAL}] | '
                         f'LR: {current_lr:0.8e} | '
                         f'Loss: {loss_avg/interval:0.4f} | '
                         f'Dice: {dice_avg/interval:0.4f} |'
@@ -140,7 +141,7 @@ def main():
                         if rank == 0:
                             ###################### Logging ######################
                             msg = (
-                                f'[{interval}/{opt.MAX_INTERVAL}] | '
+                                f'[{interval:6d}/{opt.MAX_INTERVAL}] | '
                                 f'Validation | '
                                 f'Dice: {dice_avg_val/(idx+1):0.4f} |'
                             )
@@ -155,6 +156,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-# opt.WORLD_SIZE = 2
-# if __name__ == '__main__':
-#     train, val = get_dataset(opt)
