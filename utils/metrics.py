@@ -1,30 +1,29 @@
-from torch import nn
-
-from torch.nn import functional as F
-import torch.distributed as dist
 import torch
-import math
+import torch.distributed as dist
 
 class MetricTracker():
     """
     원하는 Metric을 전부 계산하고 Dict형태로 출력하는 클래스
     - Train시 Score는 첫 번쨰 Interval부터 축척된 평균값임
     - Resume시 checkpoint까지 저장된 평균값에서부터 다시 시작
+    - Resume시 self.sum = checkpoint['avg']
     """
     def __init__(self, opt):
         self.opt = opt
         self.world_size = opt.WORLD_SIZE
         self.metrics = opt.CHECKPOINT.METRICS
-        self.result = {m:0 for m in opt.CHECKPOINT.METRICS}
-
-        # self.avg = {m:0 for m in opt.CHECKPOINT.METRICS}
-        self.avg = None
         
-    def get(self, input, target, rank):
+        # Resume모드일 땐 기존 avg를 이어서 사용하기 때문에 interval=1 로 시작
+        self.interval = 0 if self.opt.MODEL.RESUME_PATH is None else 1
+        self.sum = {m:0 for m in opt.CHECKPOINT.METRICS}
+        self.avg = {m:0 for m in opt.CHECKPOINT.METRICS}
+
+        
+    def get(self, output, target, rank):
         """
         1 interval 당 Metric값 계산 (Batch 및 Multi-GPU 평균)
 
-        input: [B, H, W] or [B, 1, H, W]
+        output: [B, H, W] or [B, 1, H, W]
         target: [B, H, W] or [B, 1, H, W]
 
         return: {
@@ -32,31 +31,21 @@ class MetricTracker():
             'metric2': score2
         }
         """
+        self.interval += 1
+
+        pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
         for metric in self.metrics:
-            score = eval(metric)(input, target).to(rank)
-            dist.all_reduce(score, op=dist.ReduceOp.SUM)
+            score = eval(metric)(pred, target).to(rank) # 각 Metric별 score 계산
+            dist.all_reduce(score, op=dist.ReduceOp.SUM) # Multi-GPU 결과 합산
 
-            self.result[metric] = (score / self.opt.WORLD_SIZE).item()
-
-        return self._get_avg(self.result)
-
-    def _get_avg(self, result):
-        if self.avg is None:
-            self.avg = result
-        else:
-            for m, score in result.items():
-                self.avg[m] = (self.avg[m] + score) / 2
+            self.sum[metric] += (score / self.opt.WORLD_SIZE).item()
+            self.avg[metric] = self.sum[metric] / self.interval
 
         return self.avg
 
 
 # # https://github.com/pytorch/pytorch/issues/1249
 def Dice(input, target):
-    '''
-    Binary만 계산
-    input: [B, C, H, W]
-    target: [B, H, W] or [B, 1, H, W]
-    '''
     num_in_target = input.shape[0]
     
     smooth = 1.
@@ -71,7 +60,6 @@ def Dice(input, target):
     return score.mean()
 
 def IoU(input, target):
-    """IoU calculation """
     num_in_target = input.size(0)
 
     pred = input.view(num_in_target, -1)
@@ -86,39 +74,3 @@ def IoU(input, target):
     score = (intersection + 1e-15) / (union + 1e-15)
 
     return score.mean()
-
-
-if __name__ == '__main__':
-    import yaml
-    from easydict import EasyDict
-    with open('../configs/config.yaml', "r") as f:
-        opt = yaml.safe_load(f)
-    opt = EasyDict(opt)
-
-    train_metric = MetricTracker(opt)
-    print(train_metric.results)
-    print(eval('Dice'))
-# class MetricTracker(object):
-#     """Computes and stores the average and current value"""
-#     def __init__(self):
-#         self.reset()
-
-#     def reset(self):
-#         self.val = 0
-#         self.avg = 0
-#         self.sum = 0
-#         self.count = 0
-
-#     def update(self, val, n=1):
-#         self.val = val
-#         self.sum += val * n
-#         self.count += n
-#         self.avg = self.sum / self.count
-
-
-
-# if __name__ == '__main__':
-#     a = torch.ones((5,1,256,256))
-#     b = torch.ones((5,256,256))
-
-#     print(dice(a,b))

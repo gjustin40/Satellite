@@ -88,6 +88,8 @@ def main():
 
             data = next(generator)
             image, label = data['image'].to(RANK), data['label'].to(RANK)
+
+            # remove
             output = model.forward(image)
 
             optimizer.zero_grad()
@@ -98,7 +100,7 @@ def main():
             dist.all_reduce(loss, op=dist.ReduceOp.SUM)
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
-            train_avg = train_metric.get(output, label, RANK)
+            train_avg = train_metric.get(output.cpu(), label.cpu(), RANK)
             dice_s = model.get_metric(output, label).to(RANK)
             dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
             dice_avg += (dice_s.item() / opt.WORLD_SIZE)
@@ -143,7 +145,7 @@ def main():
                         image, label = data['image'].to(RANK), data['label'].to(RANK)
                         output = model.forward(image)
 
-                        val_avg = val_metric.get(output, label, RANK)
+                        val_avg = val_metric.get(output.cpu(), label.cpu(), RANK)
                         dice_s = model.get_metric(output, label).to(RANK)
                         dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
                         dice_avg_val += ((dice_s.item() / opt.WORLD_SIZE))
