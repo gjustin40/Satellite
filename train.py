@@ -115,10 +115,10 @@ def main():
 
                     msg = (
                         f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
-                        f'LR: {current_lr:0.8e} | '
-                        f'Loss: {loss_avg/interval:0.4f} | '
-                        f'Dice: {dice_avg/interval:0.4f} | '
-                        f'Dice2: {train_avg["Dice"]:0.4f} | '
+                        f'LR: {current_lr:.8e} | '
+                        f'Loss: {loss_avg/interval:.4f} | '
+                        f'Dice: {dice_avg/interval:.4f} | '
+                        f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg.items()])} | '
                         f'Time: {interval_time} | '
                         f'ETA: {eta}'
                     )
@@ -156,7 +156,7 @@ def main():
                                 f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                                 f'Validation | '
                                 f'Dice: {dice_avg_val/idx:0.4f} | '
-                                f'Dice2: {val_avg["Dice"]:0.4f} | '
+                                f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg.items()])} | '
                             )
                             tbar.set_description(msg)
                             if idx == len(val_loader):
