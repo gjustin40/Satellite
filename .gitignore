@@ -1,4 +1,3 @@
-*.log
 *.pth
 *.png
 *.jpg
@@ -7,6 +6,3 @@
 *.ipynb
 *.tif
 *.tiff
-*.sh
-
-backbone/data/*
