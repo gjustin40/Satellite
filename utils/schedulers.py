@@ -81,9 +81,6 @@ class WarmupCosineLR(WarmupLR):
 
 
 
-__all__ = ['polylr', 'warmuppolylr', 'warmupcosinelr', 'warmupsteplr']
-
-
 def get_scheduler(scheduler_name: str, optimizer, max_iter: int, power: int, warmup_iter: int, warmup_ratio: float):
     assert scheduler_name in __all__, f"Unavailable scheduler name >> {scheduler_name}.\nAvailable schedulers: {__all__}"
     if scheduler_name == 'warmuppolylr':

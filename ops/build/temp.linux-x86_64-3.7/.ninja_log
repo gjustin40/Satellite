@@ -1,0 +1,4 @@
+# ninja log v5
+1	3234	1671424832074876726	/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/build/temp.linux-x86_64-3.7/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/src/cpu/ms_deform_attn_cpu.o	27a49455d8ec5fa7
+1	10275	1671424839110842187	/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/build/temp.linux-x86_64-3.7/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/src/cuda/ms_deform_attn_cuda.o	6f401ad75be88ce1
+0	16523	1671424845354811544	/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/build/temp.linux-x86_64-3.7/yh.sakong/github/ViT-Adapter-Mask2Former/detection/ops/src/vision.o	b84dff54ca972bb2

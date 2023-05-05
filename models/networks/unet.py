@@ -9,13 +9,13 @@ import torch.nn.functional as F
 
 
 class UNet(nn.Module):
-    def __init__(self, in_channels, num_classes, bilinear=False):
+    def __init__(self, in_chans, num_classes, bilinear=False):
         super(UNet, self).__init__()
-        self.in_channels = in_channels
+        self.in_channels = in_chans
         self.num_classes = num_classes
         self.bilinear = bilinear
 
-        self.inc = (DoubleConv(in_channels, 64))
+        self.inc = (DoubleConv(in_chans, 64))
         self.down1 = (Down(64, 128))
         self.down2 = (Down(128, 256))
         self.down3 = (Down(256, 512))

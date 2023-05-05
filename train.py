@@ -24,6 +24,9 @@ from datasets import get_dataset
 
 from models import get_model
 
+from utils import WarmupPolyLR
+
+
 #################### Read YAML File ####################
 parser = argparse.ArgumentParser(description='Train a segmentor')
 parser.add_argument('config', help='train config file path')
@@ -65,9 +68,13 @@ ddp_print('Number of val images: ', len(val_loader.dataset))
 
 #################### Get Model ####################
 model = get_model(opt)
+# if opt.MODEL.RESUME_PATH:
+#     checkpoint = 
+#     model.
 
 #################### Get Optimizers ####################
 optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
+scheduler = WarmupPolyLR(optimizer, power=1, max_iter=opt.INTERVAL.MAX_INTERVAL, warmup_iter=3000, warmup='linear')
 
 dist.barrier()
 def main():
@@ -96,6 +103,7 @@ def main():
             loss = model.get_loss(output, label)
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             dist.all_reduce(loss, op=dist.ReduceOp.SUM)
             loss_avg += (loss.item() / opt.WORLD_SIZE)
@@ -163,13 +171,14 @@ def main():
                                 logger.val.info(msg)                 
                     
                     if RANK == 0:
-                        score = dice_avg_val/idx
-                        model.save_checkpoint(interval, score)
                         state = {
                             'interval': interval,
-                            'Dice': round(score, 4),
                             'state_dict': model.net.module.state_dict(),
+                            'optimizer_state_dict': optimizer.state_dict(),
+                            'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
+                            'metrics': val_avg
                         }
+                        model.save_checkpoint(state)
 
                 timer.start_t = time.time()
 

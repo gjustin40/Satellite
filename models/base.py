@@ -7,6 +7,7 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from .networks import get_network
+from utils import load_pretrained_weight
 
 
 class BaseModel(ABC):
@@ -42,21 +43,16 @@ class BaseModel(ABC):
     def _get_network(self):
         net = get_network(
             network_name=self.opt.MODEL.NETWORK_NAME,
-            in_channels=self.opt.MODEL.IN_CHANNELS,
+            in_chans=self.opt.MODEL.IN_CHANNELS,
             num_classes=self.opt.MODEL.NUM_CLASSES
         )
         # net.apply(self._init_weights)
 
-        return self._load_checkpoint(net)
-    
-
-    def _load_checkpoint(self, net):
-
-        # if self.opt.RESUME_PATH:
-        #     checkpoint = torch.load(self.opt.RESUME_PATH)
-            
+        # if self.opt.MODEL.PRETRAINED_PATH:
+        #     net = load_pretrained_weight(net, self.opt.MODEL.PRETRAINED_PATH)
 
         return self._wrap_ddp(net)
+    
 
     def _wrap_ddp(self, net):
         net.to(self.rank)
@@ -65,6 +61,7 @@ class BaseModel(ABC):
         net = DDP(net, device_ids=[self.rank], output_device=self.rank)
 
         return net
+
 
     def _init_weights(m: nn.Module) -> None:
         if isinstance(m, nn.Linear):
@@ -86,22 +83,18 @@ class BaseModel(ABC):
         for param_group in optimizer.param_groups:
             return param_group['lr']
 
-    def save_checkpoint(self, interval, score):
-        state = {
-            'state_dict': self.net.module.state_dict(),
-            'Dice': round(score, 4),
-            'iter': interval,
-        }
 
+    def save_checkpoint(self, state):
         # Last Checkpoint Save
         checkpoint_path = os.path.join(self.opt.EXP.SAVE_DIR, 'last.pth')
         torch.save(state, checkpoint_path)
 
         # Best Score Save
-        if self.best < score:
+        best_score = state['metrics'][self.opt.CHECKPOINT.BEST_METRIC]
+        if self.best < best_score:
             checkpoint_path = os.path.join(
                 self.opt.EXP.SAVE_DIR,
-                f'best_{interval}_{self.opt.CHECKPOINT.BEST_SCORE}_{score:0.4f}.pth'
+                f'best_{state["interval"]}_{self.opt.CHECKPOINT.BEST_METRIC}_{best_score:0.4f}.pth'
             )
             torch.save(state, checkpoint_path)
             if self.best_checkpoint_path is not None:
@@ -109,9 +102,9 @@ class BaseModel(ABC):
 
             print(
                 f"Save Checkpoint '{self.opt.EXP.SAVE_DIR}' | "
-                f"Metric : {self.opt.CHECKPOINT.BEST_SCORE} | "
-                f"{self.best:0.4f} -> {score:0.4f}\n"
+                f"Metric : {self.opt.CHECKPOINT.BEST_METRIC} | "
+                f"{self.best:0.4f} -> {best_score:0.4f}\n"
             )
 
             self.best_checkpoint_path = checkpoint_path
-            self.best = score
+            self.best = best_score
