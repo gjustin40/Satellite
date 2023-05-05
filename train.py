@@ -19,6 +19,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 
 from utils.utils_general import set_random_seeds, running_time
 from utils.utils_logging import Logger, ddp_print
+from utils.metrics import MetricTracker
 from datasets import get_dataset
 
 from models import get_model
@@ -72,6 +73,8 @@ dist.barrier()
 def main():
     timer = running_time(opt.INTERVAL.MAX_INTERVAL)
 
+    train_metric = MetricTracker(opt)
+    
     loss_avg = 0
     dice_avg = 0
     interval = 0
@@ -95,6 +98,7 @@ def main():
             dist.all_reduce(loss, op=dist.ReduceOp.SUM)
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
+            train_avg = train_metric.get(output, label, RANK)
             dice_s = model.get_metric(output, label).to(RANK)
             dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
             dice_avg += (dice_s.item() / opt.WORLD_SIZE)
@@ -112,6 +116,7 @@ def main():
                         f'LR: {current_lr:0.8e} | '
                         f'Loss: {loss_avg/interval:0.4f} | '
                         f'Dice: {dice_avg/interval:0.4f} | '
+                        f'Dice2: {train_avg["Dice"]:0.4f} | '
                         f'Time: {interval_time} | '
                         f'ETA: {eta}'
                     )
@@ -132,11 +137,13 @@ def main():
                     else:
                         tbar = val_loader
                     
+                    val_metric = MetricTracker(opt)
                     dice_avg_val = 0
                     for idx, data in enumerate(tbar, start=1):
                         image, label = data['image'].to(RANK), data['label'].to(RANK)
                         output = model.forward(image)
 
+                        val_avg = val_metric.get(output, label, RANK)
                         dice_s = model.get_metric(output, label).to(RANK)
                         dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
                         dice_avg_val += ((dice_s.item() / opt.WORLD_SIZE))
@@ -146,20 +153,21 @@ def main():
                             msg = (
                                 f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                                 f'Validation | '
-                                f'Dice: {dice_avg_val/idx:0.4f} |'
+                                f'Dice: {dice_avg_val/idx:0.4f} | '
+                                f'Dice2: {val_avg["Dice"]:0.4f} | '
                             )
                             tbar.set_description(msg)
                             if idx == len(val_loader):
                                 logger.val.info(msg)                 
                     
                     if RANK == 0:
+                        score = dice_avg_val/idx
+                        model.save_checkpoint(interval, score)
                         state = {
                             'interval': interval,
                             'Dice': round(score, 4),
                             'state_dict': model.net.module.state_dict(),
                         }
-                        score = dice_avg_val/idx
-                        model.save_checkpoint(interval, score)
 
                 timer.start_t = time.time()
 

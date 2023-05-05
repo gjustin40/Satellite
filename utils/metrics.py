@@ -1,7 +1,7 @@
 from torch import nn
 
 from torch.nn import functional as F
-
+import torch.distributed as dist
 import torch
 import math
 
@@ -12,15 +12,15 @@ class MetricTracker():
     - Resume시 checkpoint까지 저장된 평균값에서부터 다시 시작
     """
     def __init__(self, opt):
+        self.opt = opt
         self.world_size = opt.WORLD_SIZE
         self.metrics = opt.CHECKPOINT.METRICS
         self.result = {m:0 for m in opt.CHECKPOINT.METRICS}
 
         # self.avg = {m:0 for m in opt.CHECKPOINT.METRICS}
         self.avg = None
-        self.avg_que = [] # [t-1, t] 평균
         
-    def get_metric(self, input, target, rank):
+    def get(self, input, target, rank):
         """
         1 interval 당 Metric값 계산 (Batch 및 Multi-GPU 평균)
 
@@ -36,8 +36,9 @@ class MetricTracker():
             score = eval(metric)(input, target).to(rank)
             dist.all_reduce(score, op=dist.ReduceOp.SUM)
 
-            self.result[metric] = (score / opt.WORLD_SIZE).item()
+            self.result[metric] = (score / self.opt.WORLD_SIZE).item()
 
+        return self._get_avg(self.result)
 
     def _get_avg(self, result):
         if self.avg is None:
@@ -45,6 +46,8 @@ class MetricTracker():
         else:
             for m, score in result.items():
                 self.avg[m] = (self.avg[m] + score) / 2
+
+        return self.avg
 
 
 # # https://github.com/pytorch/pytorch/issues/1249
