@@ -12,7 +12,7 @@ class UNetModel(BaseModel):
         self.loss_fn = BCELoss()
 
         # Metric Functions
-        self.metric_fn = dice
+        self.metric_fn = Dice
 
     def forward(self, image):
         return self.net(image)

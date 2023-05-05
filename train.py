@@ -31,7 +31,7 @@ with open(args.config, "r") as f:
     opt = yaml.safe_load(f)
 
 #################### Set DDP ####################
-dist.init_process_group("nccl")
+dist.init_process_group("nccl", timeout=datetime.timedelta(seconds=18000))
 WORLD_SIZE = dist.get_world_size()
 RANK = dist.get_rank()
 torch.cuda.set_device(RANK)
@@ -78,7 +78,6 @@ def main():
     generator = iter(train_loader) # Iteration based
     while interval < opt.INTERVAL.MAX_INTERVAL:
         try:
-
             interval += 1
             current_lr = model.get_lr(optimizer)
             ###################### Train ######################
@@ -96,14 +95,14 @@ def main():
             dist.all_reduce(loss, op=dist.ReduceOp.SUM)
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
-            dice_s = model.get_metric(output, label)
-            dice_s_sum = torch.tensor(dice_s, device=RANK, dtype=torch.float)
-            dist.all_reduce(dice_s_sum, op=dist.ReduceOp.SUM)
-            dice_avg += (dice_s_sum.item() / opt.WORLD_SIZE)
+            dice_s = model.get_metric(output, label).to(RANK)
+            dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
+            dice_avg += (dice_s.item() / opt.WORLD_SIZE)
 
             dist.barrier()
+            
+            ###################### Logging ######################
             if RANK == 0:
-                ###################### Logging ######################
                 if (((interval % opt.INTERVAL.LOG_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
                     timer.end_t = time.time()
                     interval_time, eta = timer.predict(interval)
@@ -134,16 +133,13 @@ def main():
                         tbar = val_loader
                     
                     dice_avg_val = 0
-                    dice_avg_val2 = 0
                     for idx, data in enumerate(tbar, start=1):
                         image, label = data['image'].to(RANK), data['label'].to(RANK)
                         output = model.forward(image)
 
-                        batch = image.shape[0]
-                        dice_s = model.get_metric(output, label)
-                        dice_s_sum = torch.tensor(dice_s, device=RANK, dtype=torch.float)
-                        dist.all_reduce(dice_s_sum, op=dist.ReduceOp.SUM)
-                        dice_avg_val += ((dice_s_sum.item() / opt.WORLD_SIZE))
+                        dice_s = model.get_metric(output, label).to(RANK)
+                        dist.all_reduce(dice_s, op=dist.ReduceOp.SUM)
+                        dice_avg_val += ((dice_s.item() / opt.WORLD_SIZE))
 
                         if RANK == 0:
                             ###################### Logging ######################
@@ -157,6 +153,11 @@ def main():
                                 logger.val.info(msg)                 
                     
                     if RANK == 0:
+                        state = {
+                            'interval': interval,
+                            'Dice': round(score, 4),
+                            'state_dict': model.net.module.state_dict(),
+                        }
                         score = dice_avg_val/idx
                         model.save_checkpoint(interval, score)
 

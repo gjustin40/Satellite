@@ -14,8 +14,10 @@ class BaseModel(ABC):
         self.opt = opt
         self.rank = dist.get_rank()
 
+        self.resume_interval = None
+        
         self.best = 0
-        self.best_checkpoint = None
+        self.best_checkpoint_path = None
 
     @abstractmethod
     def forward(self, image):
@@ -49,13 +51,20 @@ class BaseModel(ABC):
     
 
     def _load_checkpoint(self, net):
+
+        # if self.opt.RESUME_PATH:
+        #     checkpoint = torch.load(self.opt.RESUME_PATH)
+            
+
+        return self._wrap_ddp(net)
+
+    def _wrap_ddp(self, net):
         net.to(self.rank)
         if self.opt.WORLD_SIZE > 1:
             net = nn.SyncBatchNorm.convert_sync_batchnorm(net)
         net = DDP(net, device_ids=[self.rank], output_device=self.rank)
 
         return net
-
 
     def _init_weights(m: nn.Module) -> None:
         if isinstance(m, nn.Linear):
@@ -95,8 +104,8 @@ class BaseModel(ABC):
                 f'best_{interval}_{self.opt.CHECKPOINT.BEST_SCORE}_{score:0.4f}.pth'
             )
             torch.save(state, checkpoint_path)
-            if self.best_checkpoint is not None:
-                os.remove(self.best_checkpoint)
+            if self.best_checkpoint_path is not None:
+                os.remove(self.best_checkpoint_path)
 
             print(
                 f"Save Checkpoint '{self.opt.EXP.SAVE_DIR}' | "
@@ -104,5 +113,5 @@ class BaseModel(ABC):
                 f"{self.best:0.4f} -> {score:0.4f}\n"
             )
 
-            self.best_checkpoint = checkpoint_path
+            self.best_checkpoint_path = checkpoint_path
             self.best = score
