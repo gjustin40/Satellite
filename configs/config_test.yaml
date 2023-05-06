@@ -11,10 +11,10 @@ MODEL:
   LOAD_PATH: 
 DATA:
   DATASET: spacenet6optical
-  TRAIN_DIR: '/home/yh.sakong/data/preprocessed/optical/train'
-  VAL_DIR: '/home/yh.sakong/data/preprocessed/optical/val'
+  TRAIN_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/train'
+  VAL_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/val'
   TRAIN_BATCH: 2
-  VAL_BATCH: 1
+  VAL_BATCH: 32
   NUM_WORKERS: 0
 INTERVAL:
   MAX_INTERVAL: 80000

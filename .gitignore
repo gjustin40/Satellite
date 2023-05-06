@@ -6,3 +6,4 @@
 *.ipynb
 *.tif
 *.tiff
+exp/*
