@@ -40,6 +40,14 @@ class BaseModel(ABC):
         self.net.eval()
 
 
+    def get_params(self):
+        """
+        만약 ViT, BEiT 모델을 사용한다면
+        layer_decay_optimizer_constructor를 사용 
+        """
+        return self.net.parameters()
+
+
     def _get_network(self):
         net = get_network(
             network_name=self.opt.MODEL.NETWORK_NAME,
@@ -50,7 +58,7 @@ class BaseModel(ABC):
 
         # if self.opt.MODEL.PRETRAINED_PATH:
         #     net = load_pretrained_weight(net, self.opt.MODEL.PRETRAINED_PATH)
-
+        
         return self._wrap_ddp(net)
     
 
@@ -58,7 +66,8 @@ class BaseModel(ABC):
         net.to(self.rank)
         if self.opt.WORLD_SIZE > 1:
             net = nn.SyncBatchNorm.convert_sync_batchnorm(net)
-        net = DDP(net, device_ids=[self.rank], output_device=self.rank)
+            net = DDP(net, device_ids=[self.rank], output_device=self.rank)
+        
 
         return net
 

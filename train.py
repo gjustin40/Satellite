@@ -73,8 +73,9 @@ model = get_model(opt)
 #     model.
 
 #################### Get Optimizers ####################
-optimizer = optim.AdamW(model.net.parameters(), lr=opt.OPTIM.LR)
-scheduler = WarmupPolyLR(optimizer, power=1, max_iter=opt.INTERVAL.MAX_INTERVAL, warmup_iter=3000, warmup='linear')
+params = model.get_params()
+optimizer = optim.AdamW(params)
+scheduler = WarmupPolyLR(optimizer, power=1, max_iter=opt.INTERVAL.MAX_INTERVAL, warmup_iter=1500, warmup='linear')
 
 dist.barrier()
 def main():

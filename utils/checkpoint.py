@@ -11,7 +11,7 @@ def load_pretrained_weight(model, weight_path):
     model_dict = model.backbone.state_dict()
     new_pretrained_dict = {}
 
-    matched, size_mismatched, not_found = 0
+    matched, size_mismatched, not_found = 0, 0, 0
     for k, v in pretrained_dict.items():
         if k in model_dict:
             if model_dict[k].size() == v.size():

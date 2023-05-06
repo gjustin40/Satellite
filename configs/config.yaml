@@ -1,6 +1,7 @@
 EXP:
   EXP_NAME: UperNet-sn6-optical
   SAVE_DIR: # default : exp/{EXP_NAME}
+  DDP: true
 MODEL:
   MODEL_NAME: UperNet
   NETWORK_NAME: BEiTAdapterUperNet
@@ -11,20 +12,24 @@ MODEL:
   LOAD_PATH: 
 DATA:
   DATASET: spacenet6optical
-  TRAIN_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/train'
-  VAL_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/val'
+  TRAIN_DIR: '/home/yh.sakong/data/preprocessed/optical/train'
+  VAL_DIR: '/home/yh.sakong/data/preprocessed/optical/val'
   TRAIN_BATCH: 2
   VAL_BATCH: 1
   NUM_WORKERS: 0
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 2000
-  LOG_INTERVAL: 100
+  VAL_INTERVAL: 20
+  LOG_INTERVAL: 1
 CHECKPOINT:
   METRICS: ['Dice', 'IoU'] # ex) Dice, IoU
   BEST_METRIC: Dice # IoU Dice
   THRESHOLD: 0.3
 OPTIM:
   LR: 2.e-05
-  WEIGHT_DECAY: 1.e-3
+  WEIGHT_DECAY: 0.05
+  PARAMWISE:
+    NUM_LAYERS: 24
+    LAYER_DECAY_RATE: 0.9
+
   
