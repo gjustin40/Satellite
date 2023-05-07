@@ -1,9 +1,9 @@
 EXP:
-  EXP_NAME: UperNetAux-sn6-optical
+  EXP_NAME: class_150
   SAVE_DIR: # default : exp/{EXP_NAME}
   DDP: true
 MODEL:
-  MODEL_NAME: UperNetAux
+  MODEL_NAME: UperNetAux150
   NETWORK_NAME: BEiTAdapterUperNetAux
   IN_CHANNELS: 4
   NUM_CLASSES: 1
@@ -19,10 +19,10 @@ DATA:
   NUM_WORKERS: 0
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 2000
-  LOG_INTERVAL: 100
+  VAL_INTERVAL: 10
+  LOG_INTERVAL: 1
 CHECKPOINT:
-  METRICS: ['Dice', 'IoU'] # ex) Dice, IoU
+  METRICS: ['Dice', 'Dice2', 'IoU', 'IoU2'] # ex) Dice, IoU
   BEST_METRIC: Dice # IoU Dice
   THRESHOLD: 0.3
 OPTIM:

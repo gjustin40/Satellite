@@ -22,7 +22,7 @@ class BCELoss(nn.Module):
 
 
 class CrossEntropyLoss(nn.Module):
-    def __init__(self, weight=None, aux_weights=[1, 0.4, 0.4]):
+    def __init__(self, weight=None, aux_weights=[0.4, 1]):
         super().__init__()
         self.aux_weights = aux_weights
         self.criterion = nn.CrossEntropyLoss(weight=weight)

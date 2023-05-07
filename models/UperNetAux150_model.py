@@ -3,9 +3,9 @@ from .base import BaseModel
 from .networks import *
 from utils import *
 
-class UperNetModel(BaseModel):
+class UperNetAux150Model(BaseModel):
     def __init__(self, opt):
-        super(UperNetModel, self).__init__(opt=opt)
+        super(UperNetAux150Model, self).__init__(opt=opt)
         self.net = self._get_network()
 
         # Loss Functions
@@ -23,7 +23,7 @@ class UperNetModel(BaseModel):
         # torch.Size([1, 1024, 16, 16]) # 1/32
         # torch.Size([1, 1, 512, 512]) # 1/1 (B, C, 512, 512)
 
-        return self.net(image)[-1] # only last map (== output)
+        return self.net(image)[-2:] # only last map (== output)
 
     def _get_network(self):
         net = get_network(
@@ -33,12 +33,6 @@ class UperNetModel(BaseModel):
         )
         net.apply(init_weights)
 
-        if self.opt.MODEL.LOAD_PATH:
-            checkpoint = torch.load(self.opt.MODEL.LOAD_PATH, map_location='cpu')
-            net.load_state_dict(checkpoint['state_dict'])
-            if self.rank == 0:
-                print('Loading checkpoint.....')
-                
         if self.opt.MODEL.PRETRAINED_PATH:
             net = load_pretrained_weight(net, self.opt.MODEL.PRETRAINED_PATH)
         
@@ -46,11 +40,14 @@ class UperNetModel(BaseModel):
 
 
     def get_loss(self, output, label):
-        return self.loss_fn(output, label)
+        loss1 = self.loss_fn(output[-1], label)
+        loss2 = self.loss_fn(output[-2], label)
+
+        return loss1 + loss2*0.4
 
 
     def get_metric(self, output, label):
-        pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
+        pred = (torch.sigmoid(output[-1].cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
         dice_score = self.metric_fn(pred, label.cpu())
         return dice_score
 
