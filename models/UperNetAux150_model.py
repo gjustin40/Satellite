@@ -10,7 +10,7 @@ class UperNetAux150Model(BaseModel):
 
         # Loss Functions
         self.loss_fn = BCELoss()
-
+        self.loss_fn = CrossEntropyLoss()
         # Metric Functions
         self.metric_fn = Dice
 
@@ -40,10 +40,8 @@ class UperNetAux150Model(BaseModel):
 
 
     def get_loss(self, output, label):
-        loss1 = self.loss_fn(output[-1], label)
-        loss2 = self.loss_fn(output[-2], label)
 
-        return loss1 + loss2*0.4
+        return self.loss_fn(output, label)
 
 
     def get_metric(self, output, label):

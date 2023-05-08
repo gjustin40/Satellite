@@ -43,6 +43,31 @@ class MetricTracker():
 
         return self.avg
 
+    # def get(self, output, target, rank):
+    #     """
+    #     1 interval 당 Metric값 계산 (Batch 및 Multi-GPU 평균)
+
+    #     output: [B, H, W] or [B, 1, H, W]
+    #     target: [B, H, W] or [B, 1, H, W]
+
+    #     return: {
+    #         'metric1': score1,
+    #         'metric2': score2
+    #     }
+    #     """
+    #     self.interval += 1
+
+    #     pred = torch.argmax(output[-1].cpu(), dim=1)
+    #     # pred = (torch.sigmoid(output[-1].cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
+    #     for metric in self.metrics:
+    #         score = eval(metric)(pred, target).to(rank) # 각 Metric별 score 계산
+    #         dist.all_reduce(score, op=dist.ReduceOp.SUM) # Multi-GPU 결과 합산
+
+    #         self.sum[metric] += (score / self.opt.WORLD_SIZE).item()
+    #         self.avg[metric] = self.sum[metric] / self.interval
+
+    #     return self.avg
+
 
 # # https://github.com/pytorch/pytorch/issues/1249
 def Dice(input, target):

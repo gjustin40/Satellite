@@ -1,5 +1,5 @@
 EXP:
-  EXP_NAME: UperNetAux-sn6-optical
+  EXP_NAME: UperNetAux-sn6-optical-newnrom-complete
   SAVE_DIR: # default : exp/{EXP_NAME}
   DDP: true
 MODEL:

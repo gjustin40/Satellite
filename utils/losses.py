@@ -32,8 +32,8 @@ class CrossEntropyLoss(nn.Module):
         return self.criterion(preds, labels)
 
     def forward(self, preds, labels):
-        if isinstance(preds, tuple):
-            return sum([w * self._forward(pred, labels) for (pred, w) in zip(preds, self.aux_weights)])
+        if isinstance(preds, list):
+            return sum([w * self._forward(pred, labels.long()) for (pred, w) in zip(preds, self.aux_weights)])
         return self._forward(preds, labels)
 
 

@@ -1,0 +1,41 @@
+EXP:
+  EXP_NAME: UperNet-sn6-optical
+  SAVE_DIR: ./exp/UperNet-sn6-optical/2023_05_07_11_00
+MODEL:
+  MODEL_NAME: UperNet
+  NETWORK_NAME: BEiTAdapterUperNet
+  IN_CHANNELS: 4
+  NUM_CLASSES: 1
+  PRETRAINED_PATH: null
+  RESUME_PATH: null
+  LOAD_PATH: /home/yh.sakong/github/Satellite/exp/UperNet-sn6-optical/2023_05_06_06_00/best_64000_Dice_0.7650.pth
+DATA:
+  DATASET: spacenet6optical
+  TRAIN_DIR: /home/yh.sakong/data/preprocessed/optical/train
+  VAL_DIR: /home/yh.sakong/data/preprocessed/optical/val
+  TRAIN_BATCH: 2
+  VAL_BATCH: 1
+  NUM_WORKERS: 0
+TEST:
+  DATASET: spacenet6optical
+  TEST_DIR: /home/yh.sakong/data/preprocessed/optical/val
+  TEST_PATH: /home/yh.sakong/github/Satellite/best_100_Dice_0.7665.pth
+  TEST_BATCH: 4
+  NUM_WORKERS: 1
+
+    
+INTERVAL:
+  MAX_INTERVAL: 80000
+  VAL_INTERVAL: 100
+  LOG_INTERVAL: 10
+CHECKPOINT:
+  METRICS:
+  - Dice
+  - IoU
+  BEST_METRIC: Dice
+  THRESHOLD: 0.3
+OPTIM:
+  SCHEDULER: 
+  LR: 1.0e-9
+  WEIGHT_DECAY: 0.05
+WORLD_SIZE: 2

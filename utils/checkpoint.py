@@ -14,15 +14,15 @@ def load_pretrained_weight(model, weight_path):
     matched, size_mismatched, not_found = 0, 0, 0
     for k, v in pretrained_dict.items():
         if k in model_dict:
-            if model_dict[k].size() == v.size():
+            if model_dict[k].size() == v.size(): # if matched
                 new_pretrained_dict[k] = v
-                print(f"Key {k} ------ is matched\n")
+                # print(f"Key {k} ------ is matched\n")
                 matched += 1
             else:
-                print(f"Size mismatch for {k}. \nModel size: {model_dict[k].size()}, pretrained size: {v.size()}\n")
+                # print(f"Size mismatch for {k}. \nModel size: {model_dict[k].size()}, pretrained size: {v.size()}\n")
                 size_mismatched += 1
         else:
-            print(f"Key {k} not found in model.")
+            # print(f"Key {k} not found in model.")
             not_found += 1
 
     model_dict.update(new_pretrained_dict)

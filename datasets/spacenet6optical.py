@@ -11,8 +11,8 @@ class SpaceNet6Optical(Dataset):
     def __init__(self, root, transform):
         self.root = root
         self.transform = transform
-        self.image_dir = os.path.join(root, 'images')
-        self.mask_dir = os.path.join(root, 'labels')
+        self.image_dir = os.path.join(root, 'images_png')
+        self.mask_dir = os.path.join(root, 'labels_png')
 
         self.image_ids = self.get_ids_(self.image_dir)
         self.mask_ids = self.get_ids_(self.mask_dir)
