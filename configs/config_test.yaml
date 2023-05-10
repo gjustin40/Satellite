@@ -18,11 +18,11 @@ DATA:
   NUM_WORKERS: 0
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 20
+  VAL_INTERVAL: 10
   LOG_INTERVAL: 1
 CHECKPOINT:
-  METRICS: ['Dice', 'IoU'] # ex) Dice, IoU
-  BEST_METRIC: Dice # IoU Dice
+  METRICS: ['mDice'] # ex) Dice, IoU
+  BEST_METRIC: mDice # IoU Dice
   THRESHOLD: 0.3
 OPTIM:
   LR: 2.e-03

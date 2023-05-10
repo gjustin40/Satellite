@@ -12,7 +12,10 @@ class BCELoss(nn.Module):
     def _forward(self, preds, labels):
         # preds in shape [B, C, H, W] and labels in shape [B, H, W]
         # (C == 1) in binary segmentation
-        preds_ = preds.squeeze(1)
+
+        if (preds.dim() == 4) and (labels.dim() == 3):
+            preds_ = preds.squeeze(1)
+
         return self.criterion(preds_, labels)
 
     def forward(self, preds, labels):

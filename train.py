@@ -87,6 +87,8 @@ def main():
     dice_avg = 0
     interval = 0
     generator = iter(train_loader) # Iteration based
+
+    ddp_print('Start Loop....')
     while interval < opt.INTERVAL.MAX_INTERVAL:
         try:
             interval += 1
@@ -110,6 +112,7 @@ def main():
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
             train_avg = train_metric.get(output, label.cpu(), RANK)
+            train_avg2 = train_metric.get2(output, label, RANK)
 
             dist.barrier()
             
@@ -124,6 +127,7 @@ def main():
                         f'LR: {current_lr:.8e} | '
                         f'Loss: {loss_avg/interval:.4f} | '
                         f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg.items()])} | '
+                        f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg2.items()])} | '
                         f'Time: {interval_time} | '
                         f'ETA: {eta}'
                     )
@@ -147,10 +151,11 @@ def main():
                     val_metric = MetricTracker(opt)
                     dice_avg_val = 0
                     for idx, data in enumerate(tbar, start=1):
-                        image, label = data['image'].to(RANK), data['label'].to(RANK)
+                        image, label = data['image'].to(RANK), data['label']
                         output = model.forward(image)
 
-                        val_avg = val_metric.get(output, label.cpu(), RANK)
+                        val_avg = val_metric.get(output, label, RANK)
+                        val_avg2 = val_metric.get2(output, label, RANK)
 
                         if RANK == 0:
                             ###################### Logging ######################
@@ -158,6 +163,7 @@ def main():
                                 f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                                 f'Validation | '
                                 f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg.items()])} | '
+                                f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg2.items()])} | '
                             )
                             tbar.set_description(msg)
                             if idx == len(val_loader):
@@ -169,7 +175,7 @@ def main():
                             'state_dict': model.net.module.state_dict(),
                             'optimizer_state_dict': optimizer.state_dict(),
                             'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
-                            'metrics': val_avg
+                            'metrics': val_avg2
                         }
                         model.save_checkpoint(state)
 

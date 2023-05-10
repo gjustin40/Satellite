@@ -12,7 +12,7 @@ class UNetModel(BaseModel):
         self.loss_fn = BCELoss()
 
         # Metric Functions
-        self.metric_fn = Dice
+        # self.metric_fn = Dice
 
     def forward(self, image):
         return self.net(image)
@@ -20,8 +20,8 @@ class UNetModel(BaseModel):
     def get_loss(self, output, label):
         return self.loss_fn(output, label)
 
-    def get_metric(self, output, label):
-        pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
-        dice_score = self.metric_fn(pred, label.cpu())
-        return dice_score
+    # def get_metric(self, output, label):
+    #     pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
+    #     dice_score = self.metric_fn(pred, label.cpu())
+    #     return dice_score
     # def predict(self, output, label)

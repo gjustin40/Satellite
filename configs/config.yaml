@@ -22,8 +22,8 @@ INTERVAL:
   VAL_INTERVAL: 2000
   LOG_INTERVAL: 100
 CHECKPOINT:
-  METRICS: ['Dice', 'IoU'] # ex) Dice, IoU
-  BEST_METRIC: Dice # IoU Dice
+  METRICS: ['mDice'] # ex) mDice, mIoU
+  BEST_METRIC: mDice # mIoU mDice
   THRESHOLD: 0.3
 OPTIM:
   LR: 2.e-05

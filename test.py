@@ -1,6 +1,7 @@
 import yaml
 import argparse
 from easydict import EasyDict
+import pickle
 
 import torch
 from tqdm import tqdm
@@ -30,7 +31,7 @@ in_channels = opt.MODEL.IN_CHANNELS
 num_classes = opt.MODEL.NUM_CLASSES
 checkpoint_path = opt.TEST.TEST_PATH
 # device = f'cuda:{args.gpu_id}'
-device = f'cuda:2'
+device = f'cuda:0'
 
 net = get_network(network_name, in_chans=in_channels, num_classes=num_classes)
 
@@ -43,6 +44,8 @@ test_loader = get_dataset(opt)
 tbar = tqdm(test_loader, dynamic_ncols=True, desc="Validation")
 
 result = {str(k):0 for k in np.arange(0, 1, 0.1)}
+results = []
+results_lab = []
 with torch.no_grad():
     net.eval()
 
@@ -50,11 +53,18 @@ with torch.no_grad():
         image, label = data['image'].to(device), data['label']
         output = net(image)
         output = torch.sigmoid(output[-1].cpu())
-        
-        for thresh in np.arange(0, 1, 0.1):
-            pred = (output > thresh).float()
-            dice = Dice(pred, label)
-            result[str(thresh)] += dice
+        pred = (output > 0.3).float()
+        results.append(np.array(pred[0][0]))
+        results_lab.append(np.array(label[0]))
+        # break
+        # for thresh in np.arange(0, 1, 0.1):
+        #     dice = Dice(pred, label)
+        #     result[str(thresh)] += dice
+with open('aa.pkl', 'wb') as f:
+    pickle.dump(results, f)
+
+with open('bb.pkl', 'wb') as f:
+    pickle.dump(results_lab, f)
 
 for k,v in result.items():
     print(f'threshold: {k} score: {v/len(tbar)}')

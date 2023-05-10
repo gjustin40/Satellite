@@ -12,7 +12,7 @@ class UperNetModel(BaseModel):
         self.loss_fn = BCELoss()
 
         # Metric Functions
-        self.metric_fn = Dice
+
 
     def forward(self, image):
         # out_list = features + [out]
@@ -47,12 +47,6 @@ class UperNetModel(BaseModel):
 
     def get_loss(self, output, label):
         return self.loss_fn(output, label)
-
-
-    def get_metric(self, output, label):
-        pred = (torch.sigmoid(output.cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
-        dice_score = self.metric_fn(pred, label.cpu())
-        return dice_score
 
     def get_params(self):
         return layer_decay_optimizer_constructor(self.opt, self.net)

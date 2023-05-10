@@ -1,0 +1,42 @@
+EXP:
+  EXP_NAME: beit_adapter_upernet_sn6
+  SAVE_DIR: 
+MODEL:
+  MODEL_NAME: UperNet
+  NETWORK_NAME: BEiTAdapterUperNet
+  IN_CHANNELS: 4
+  NUM_CLASSES: 1
+  PRETRAINED_PATH: null
+  RESUME_PATH: null
+  LOAD_PATH: 
+DATA:
+  DATASET: spacenet6optical
+  TRAIN_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/train'
+  VAL_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/val'
+  TRAIN_BATCH: 2
+  VAL_BATCH: 16
+  NUM_WORKERS: 0
+# TEST:
+#   DATASET: spacenet6optical
+#   TEST_DIR: /home/yh.sakong/data/sn6_building/preprocessed/optical/val
+#   TEST_PATH: /home/yh.sakong/github/Satellite/exp/UperNet-sn6-optical/2023_05_07_10_53/best_24000_Dice_0.7659.pth
+#   TEST_BATCH: 1
+#   NUM_WORKERS: 1
+INTERVAL:
+  MAX_INTERVAL: 80000
+  VAL_INTERVAL: 2000
+  LOG_INTERVAL: 500
+CHECKPOINT:
+  METRICS:
+  - mDice
+  BEST_METRIC: mDice
+  THRESHOLD: 0.3
+OPTIM:
+  SCHEDULER: 
+  LR: 2.0e-5
+  WEIGHT_DECAY: 0.05
+  PARAMWISE:
+    NUM_LAYERS: 24
+    LAYER_DECAY_RATE: 0.9
+
+WORLD_SIZE: 2
