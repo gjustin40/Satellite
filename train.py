@@ -184,6 +184,7 @@ def main():
         except StopIteration:
             train_loader.sampler.set_epoch(interval)
             generator = iter(train_loader)
+            train_metric = MetricTracker(opt) # init train_metric
 
 
 if __name__ == '__main__':

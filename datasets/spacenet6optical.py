@@ -11,8 +11,8 @@ class SpaceNet6Optical(Dataset):
     def __init__(self, root, transform):
         self.root = root
         self.transform = transform
-        self.image_dir = os.path.join(root, 'images_png')
-        self.mask_dir = os.path.join(root, 'labels_png')
+        self.image_dir = os.path.join(root, 'images')
+        self.mask_dir = os.path.join(root, 'labels')
 
         self.image_ids = self.get_ids_(self.image_dir)
         self.mask_ids = self.get_ids_(self.mask_dir)
@@ -36,7 +36,10 @@ class SpaceNet6Optical(Dataset):
             image = np.array(Image.open(image_path))
         except:
             image = rs.open(image_path).read().transpose(1,2,0)
-        mask = np.array(Image.open(mask_path))
+        try:
+            mask = np.array(Image.open(mask_path))
+        except:
+            mask = rs.open(mask_path).read().transpose(1,2,0)
         mask = np.where(mask >= 1, 1, 0)
         if mask.ndim == 3:
             mask = mask[:,:,0]

@@ -1,4 +1,5 @@
 import torch
+from utils.utils_logging import ddp_print
 
 def load_pretrained_weight(model, weight_path):
     checkpoint = torch.load(weight_path, map_location='cpu')
@@ -28,8 +29,8 @@ def load_pretrained_weight(model, weight_path):
     model_dict.update(new_pretrained_dict)
     model.backbone.load_state_dict(model_dict)
 
-    print('Result of loading Pretrained weight')
-    print(f'matched: {matched} | size_mismatched: {size_mismatched} | not_found: {not_found}')
+    ddp_print('Result of loading Pretrained weight')
+    ddp_print(f'matched: {matched} | size_mismatched: {size_mismatched} | not_found: {not_found}')
     return model
 
 if __name__ == '__main__':

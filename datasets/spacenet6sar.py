@@ -12,7 +12,7 @@ class SpaceNet6SAR(Dataset):
         self.root = root
         self.transform = transform
         self.image_dir = os.path.join(root, 'images')
-        self.mask_dir = os.path.join(root, 'labels_png')
+        self.mask_dir = os.path.join(root, 'labels')
 
         self.image_ids = self.get_ids_(self.image_dir)
         self.mask_ids = self.get_ids_(self.mask_dir)
@@ -32,11 +32,8 @@ class SpaceNet6SAR(Dataset):
         image_path = os.path.join(self.image_dir, basename)
         mask_path = os.path.join(self.mask_dir, basename)
 
-        try:
-            image = np.array(Image.open(image_path))
-        except:
-            image = rs.open(image_path).read().transpose(1,2,0)
-        mask = np.array(Image.open(mask_path))
+        image = rs.open(image_path).read().transpose(1,2,0)
+        mask  = rs.open(mask_path).read().transpose(1,2,0)
         mask = np.where(mask >= 1, 1, 0)
         if mask.ndim == 3:
             mask = mask[:,:,0]

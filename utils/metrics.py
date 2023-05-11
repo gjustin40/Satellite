@@ -253,7 +253,7 @@ def Dice2(input, target):
 
     return score.mean()
 
-def IoU(input, target):
+def mIoU(input, target):
     num_in_target = input.size(0)
 
     pred = input.view(num_in_target, -1)
