@@ -1,5 +1,6 @@
 from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
+import torch.distributed as dist
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -7,15 +8,16 @@ from albumentations.core.transforms_interface import ImageOnlyTransform
 import numpy as np
 import cv2
 from PIL import Image
-
 from .spacenet6optical import SpaceNet6Optical
 from .spacenet6sar import SpaceNet6SAR
+from .spacenet6kd import SpaceNet6KD
 
 def get_dataset(opt):
 
     datasets_dict = {
         'spacenet6optical': SpaceNet6Optical,
-        'spacenet6sar': SpaceNet6SAR
+        'spacenet6sar': SpaceNet6SAR,
+        'spacenet6kd': SpaceNet6KD
     }
     
     # train_dir = '/home/yh.sakong/data/sn6_building/preprocessed/rgb_png/train'
@@ -33,7 +35,7 @@ def get_dataset(opt):
         # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         # A.Normalize(mean=(123.675, 116.28, 103.53), std=(58.395, 57.12, 57.375)),
         # A.Normalize(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
-        # NewNorm(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
+        NewNorm(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
         ToTensorV2()])
     
     transform_val = A.Compose([
@@ -41,7 +43,7 @@ def get_dataset(opt):
         # A.Normalize(mean=(0.485, 0.456, 0.406, 0.400), std=(0.229, 0.224, 0.225, 0.226)),
         # A.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         # A.Normalize(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
-        # NewNorm(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
+        NewNorm(mean=(123.675, 116.28, 103.53, 103.53), std=(58.395, 57.12, 57.375, 57.375)),
         ToTensorV2()])
 
     # if opt.TEST.TEST_PATH:

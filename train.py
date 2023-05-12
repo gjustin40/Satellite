@@ -97,7 +97,11 @@ def main():
             model.train()
 
             data = next(generator)
-            image, label = data['image'].to(RANK), data['label'].to(RANK)
+            if isinstance(data['image'], list):
+                image = [img.to(RANK) for img in data['image']]
+                label = [lab.to(RANK) for lab in data['label']]
+            else:
+                image, label = data['image'].to(RANK), data['label'].to(RANK)
 
             # remove
             output = model.forward(image)

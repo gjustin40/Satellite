@@ -1,10 +1,6 @@
 import importlib
-
 from .networks import *
 from .base import BaseModel
-# from .beit_adapter import *
-# from .beit_adapter_upernet import *
-# from .beit_adapter_upernet_aux import *
 
 def find_model_using_name(model_name):
     """"Import the module 'models/[model_name]_model.py'

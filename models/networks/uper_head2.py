@@ -8,7 +8,7 @@ from .decode_head import BaseDecodeHead
 from .psp_head import PPM
 
 
-class UPerHead(BaseDecodeHead):
+class UPerHead2(BaseDecodeHead):
     """Unified Perceptual Parsing for Scene Understanding.
 
     This head is the implementation of `UPerNet
@@ -20,7 +20,7 @@ class UPerHead(BaseDecodeHead):
     """
 
     def __init__(self, pool_scales=(1, 2, 3, 6), **kwargs):
-        super(UPerHead, self).__init__(
+        super(UPerHead2, self).__init__(
             input_transform='multiple_select', **kwargs)
         # PSP Module
         self.psp_modules = PPM(

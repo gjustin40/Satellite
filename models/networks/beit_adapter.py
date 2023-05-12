@@ -96,45 +96,6 @@ class BEiTAdapter(BEiT):
         c4 = c4 + self.level_embed[2]
         return c2, c3, c4
 
-    # def train(self, mode=True):
-    #     """Convert the model into training mode while keep layers freezed."""
-    #     super(BEiTAdapter, self).train(mode)
-    #     self._freeze_stages()
-
-    # def _freeze_stages(self):
-    #     # Freeze가 필요한 부분들
-    #     # stage0 self.patch_embed + self.cls_token + self.pos_drop -> dropout
-    #     # stage1 self.spm + self._add_level_embed
-    #     # stage2 self.interactions
-    #     # stage3 self.up + self.norm1 ~ 4
-    #     if self.frozen_stages >= 0:
-    #         self.patch_embed.eval()
-    #         for param in self.patch_embed.parameters():
-    #             param.requires_grad = False
-    #         if self.pos_embed is not None:
-    #             self.pos_embed.requires_grad = False
-    #         self.cls_token.requires_grad = False
-    #         self.pos_drop.eval()
-
-    #     elif self.frozen_stages >= 1:
-    #         self.spm.eval()
-    #         for param in self.spm.parameters():
-    #             param.requires_grad = False
-    #         self.level_embed.requires_grad = False
-
-    #     elif self.frozen_stages >= 2:
-    #         self.interactions.eval()
-    #         for param in self.interactions.parameters():
-    #             param.requires_grad = False
-        
-    #     elif self.frozen_stages >= 3:
-    #         self.up.requires_grad = False
-    #         for i in range(4):
-    #             norm_layer = getattr(self, f'norm{i+1}')
-    #             for param in norm_layer.parameters():
-    #                 param.requires_grad = False
-
-
     def forward(self, x):
         deform_inputs1, deform_inputs2 = deform_inputs(x)
 

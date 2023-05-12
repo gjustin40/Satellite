@@ -1,6 +1,7 @@
 from .unet import *
 from .beit_adapter_upernet import *
 from .beit_adapter_upernet_aux import *
+from .beit_adapter_upernet_kd import *
 from .beit_adapter import *
 from .beit import *
 import torch.nn as nn

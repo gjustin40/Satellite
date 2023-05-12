@@ -15,6 +15,8 @@ class BCELoss(nn.Module):
 
         if (preds.dim() == 4) and (labels.dim() == 3):
             preds_ = preds.squeeze(1)
+        elif (preds.dim() == 3) and (labels.dim() == 4):
+            labels = labels.squeeze(1)
 
         return self.criterion(preds_, labels)
 
@@ -23,6 +25,30 @@ class BCELoss(nn.Module):
             return sum([w * self._forward(pred, labels) for (pred, w) in zip(preds, self.aux_weights)])
         return self._forward(preds, labels)
 
+
+class MSELoss(nn.Module):
+    def __init__(self, weight=None, aux_weights=[1, 0.4, 0.4]):
+        super().__init__()
+        self.weight = weight
+        self.aux_wegiths = aux_weights
+        self.criterion = nn.MSELoss()
+
+    def _forward(self, preds, labels):
+        # preds in shape [B, C, H, W] and labels in shape [B, H, W]
+        # (C == 1) in binary segmentation
+
+        if (preds.dim() == 4) and (labels.dim() == 3):
+            preds_ = preds.squeeze(1)
+        elif (preds.dim() == 3) and (lables.dim() == 4):
+            preds_ = label.squeeze(1)
+
+        return self.criterion(preds_, labels)
+
+    def forward(self, preds, labels):
+        if isinstance(preds, tuple):
+            return sum([w * self._forward(pred, labels) for (pred, w) in zip(preds, self.aux_weights)])
+        return self._forward(preds, labels)
+    
 
 class CrossEntropyLoss(nn.Module):
     def __init__(self, weight=None, aux_weights=[0.4, 1]):
