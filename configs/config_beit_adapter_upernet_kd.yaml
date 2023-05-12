@@ -16,7 +16,7 @@ DATA:
   TRAIN_DIR: /home/yh.sakong/data/preprocessed/kd/train
   VAL_DIR: /home/yh.sakong/data/preprocessed/kd/val
   TRAIN_BATCH: 2
-  VAL_BATCH: 2
+  VAL_BATCH: 8
   NUM_WORKERS: 0
 # TEST:
 #   DATASET: spacenet6optical

@@ -36,7 +36,6 @@ names = [
     'featuers_opt',
     'features_sar',
     'decode_opt',
-    'decode_sar',
     'out_opt',
     'out_sar',
     'out_combine'

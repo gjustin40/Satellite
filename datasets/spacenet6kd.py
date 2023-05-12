@@ -61,12 +61,12 @@ class SpaceNet6KD(Dataset):
         aug_sar = self.transform(image=sar_image, mask=sar_mask)
 
         image_list = [aug_optical['image'].float(), aug_sar['image'].float()]
-        mask_list = [aug_optical['mask'].float(), aug_sar['mask'].float()]
-        path_list = [optical_image_path, sar_image_path]
+        mask       = aug_sar['mask'].float()
+        path_list  = [optical_image_path, sar_image_path]
 
         data = {
             'image': image_list,
-            'label': mask_list,
+            'label': mask,
             'image_path': path_list
         }
 

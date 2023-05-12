@@ -11,7 +11,7 @@ class UperNetKDModel(BaseModel):
         self.teacher_net, self.net = self._get_network()
         
         # Loss Functions
-        self.loss_bec = BCELoss()
+        self.loss_bce = BCELoss()
         self.loss_mse = MSELoss()
 
         # Metric Functions
@@ -59,7 +59,8 @@ class UperNetKDModel(BaseModel):
         # out_combine : output of net which is goal
         # torch.Size([1, 1, 512, 512])
 
-        # [[4], [4], [4], 1, 1, 1, 1, 1]
+        # [[4], [4], [4], 1, 1, 1, 1]
+
         return  [teacher_outputs[-4:]] + self.net(image[1])
 
     def _get_network(self):

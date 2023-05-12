@@ -32,7 +32,6 @@ class BEiTAdapterUperNet(nn.Module):
         features = self.backbone(x)
         f, out = self.decode_head(features)
         out = F.interpolate(out, size=x.shape[2:], mode='bilinear', align_corners=False)    # to original image shape
-        f = F.interpolate(f, size=x.shape[2:], mode='bilinear', align_corners=False)    # to original image shape
         out_list = features + [f] + [out]
         
         return out_list

@@ -14,11 +14,11 @@ class BCELoss(nn.Module):
         # (C == 1) in binary segmentation
 
         if (preds.dim() == 4) and (labels.dim() == 3):
-            preds_ = preds.squeeze(1)
+            preds = preds.squeeze(1)
         elif (preds.dim() == 3) and (labels.dim() == 4):
             labels = labels.squeeze(1)
 
-        return self.criterion(preds_, labels)
+        return self.criterion(preds, labels)
 
     def forward(self, preds, labels):
         if isinstance(preds, tuple):
@@ -38,11 +38,11 @@ class MSELoss(nn.Module):
         # (C == 1) in binary segmentation
 
         if (preds.dim() == 4) and (labels.dim() == 3):
-            preds_ = preds.squeeze(1)
-        elif (preds.dim() == 3) and (lables.dim() == 4):
-            preds_ = label.squeeze(1)
+            preds = preds.squeeze(1)
+        elif (preds.dim() == 3) and (labels.dim() == 4):
+            labels = labels.squeeze(1)
 
-        return self.criterion(preds_, labels)
+        return self.criterion(preds, labels)
 
     def forward(self, preds, labels):
         if isinstance(preds, tuple):

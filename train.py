@@ -1,4 +1,5 @@
 import os
+os.environ['TORCH_DISTRIBUTED_DEBUG'] = 'INFO'
 import glob
 import time 
 import random
@@ -31,6 +32,7 @@ from utils import WarmupPolyLR
 parser = argparse.ArgumentParser(description='Train a segmentor')
 parser.add_argument('config', help='train config file path')
 args = parser.parse_args()
+
 with open(args.config, "r") as f:
     opt = yaml.safe_load(f)
 
@@ -99,7 +101,8 @@ def main():
             data = next(generator)
             if isinstance(data['image'], list):
                 image = [img.to(RANK) for img in data['image']]
-                label = [lab.to(RANK) for lab in data['label']]
+                # label = [lab.to(RANK) for lab in data['label']]
+                label = data['label'].to(RANK)
             else:
                 image, label = data['image'].to(RANK), data['label'].to(RANK)
 
@@ -154,8 +157,15 @@ def main():
                     
                     val_metric = MetricTracker(opt)
                     dice_avg_val = 0
+
                     for idx, data in enumerate(tbar, start=1):
-                        image, label = data['image'].to(RANK), data['label']
+                        if isinstance(data['image'], list):
+                            image = [img.to(RANK) for img in data['image']]
+                            # label = [lab.to(RANK) for lab in data['label']]
+                            label = data['label'].to(RANK)
+                        else:
+                            image, label = data['image'].to(RANK), data['label']
+
                         output = model.forward(image)
 
                         val_avg = val_metric.get(output, label, RANK)
