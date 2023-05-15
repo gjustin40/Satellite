@@ -15,8 +15,8 @@ DATA:
   DATASET: spacenet6kd
   TRAIN_DIR: /home/yh.sakong/data/preprocessed/kd/train
   VAL_DIR: /home/yh.sakong/data/preprocessed/kd/val
-  TRAIN_BATCH: 1
-  VAL_BATCH: 1
+  TRAIN_BATCH: 8
+  VAL_BATCH: 4
   NUM_WORKERS: 0
 # TEST:
 #   DATASET: spacenet6optical
@@ -26,7 +26,7 @@ DATA:
 #   NUM_WORKERS: 1
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 10
+  VAL_INTERVAL: 1000
   LOG_INTERVAL: 1
 CHECKPOINT:
   METRICS:

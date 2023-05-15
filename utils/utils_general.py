@@ -33,13 +33,13 @@ class running_time():
         self.total_interval_time += interval_time
 
         interval_time = timedelta(seconds=interval_time)
-        interval_time = timedelta(seconds=interval_time.seconds, microseconds=0)
+        interval_time = timedelta(days=interval_time.days, seconds=interval_time.seconds, microseconds=0)
         avg_interval_time = self.total_interval_time / interval
 
         remain_interval = self.max_interval - interval
         remain_interval_time = round(avg_interval_time * remain_interval, 2)
         remain_interval_time = timedelta(seconds=remain_interval_time)
-        remain_interval_time = timedelta(seconds=remain_interval_time.seconds, microseconds=0)
+        remain_interval_time = timedelta(days=remain_interval_time.days, seconds=remain_interval_time.seconds, microseconds=0)
 
 
         return interval_time, remain_interval_time

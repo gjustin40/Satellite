@@ -48,8 +48,8 @@ class BEiTAdapter(BEiT):
             for i in range(len(interaction_indexes))
         ])
 
-        self.up_opt = nn.ConvTranspose2d(embed_dim, embed_dim, 2, 2)
         self.up_sar = nn.ConvTranspose2d(embed_dim, embed_dim, 2, 2)
+        self.up_opt = nn.ConvTranspose2d(embed_dim, embed_dim, 2, 2)
         self.norm1_sar = nn.BatchNorm2d(embed_dim)
         self.norm2_sar = nn.BatchNorm2d(embed_dim)
         self.norm3_sar = nn.BatchNorm2d(embed_dim)

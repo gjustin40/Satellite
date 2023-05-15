@@ -80,8 +80,8 @@ class BEiTAdapterUperNetKD(nn.Module):
         self.backbone = BEiTAdapter(
             pretrain_size=512, in_chans=in_chans, conv_inplane=64, n_points=4, deform_num_heads=16,
             init_values=1e-06, cffn_ratio=0.25, deform_ratio=0.5, with_cffn=True,
-            # interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [12, 17], [18, 23]], 
-            interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [24, 29], [30, 35]], 
+            interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [12, 17], [18, 23]], 
+            # interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [24, 29], [30, 35]], 
             add_vit_feature=True, with_cp=True, 
             patch_size=16, embed_dim=1024, depth=24, num_heads=16, mlp_ratio=4, qkv_bias=True,
             use_abs_pos_emb=False, use_rel_pos_bias=True, drop_path_rate=0.3)
