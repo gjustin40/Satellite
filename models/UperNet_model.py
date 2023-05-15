@@ -9,8 +9,11 @@ class UperNetModel(BaseModel):
         self.net = self._get_network()
 
         # Loss Functions
-        self.loss_fn = BCELoss()
-
+        # self.loss_fn = BCELoss()
+        if opt.MODEL.NUM_CLASSES == 1:
+            self.loss_fn = BCELoss()
+        else:
+            self.loss_fn = CrossEntropyLoss()
         # Metric Functions
 
 

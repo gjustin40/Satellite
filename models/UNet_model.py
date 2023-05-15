@@ -9,7 +9,8 @@ class UNetModel(BaseModel):
         self.net = self._get_network()
 
         # Loss Functions
-        self.loss_fn = BCELoss()
+        # self.loss_fn = BCELoss()
+        self.loss_fn = CrossEntropyLoss()
 
         # Metric Functions
         # self.metric_fn = Dice

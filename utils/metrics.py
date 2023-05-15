@@ -15,9 +15,10 @@ class MetricTracker():
         self.opt = opt
         self.world_size = opt.WORLD_SIZE
         self.metrics = opt.CHECKPOINT.METRICS
+        self.num_classes = opt.MODEL.NUM_CLASSES
 
         # Because of Binary Segmentation (1 == 2)
-        self.num_classes = 2 if opt.MODEL.NUM_CLASSES == 1 else opt.MODEL.NUM_CLASSES
+        # self.num_classes = 2 if opt.MODEL.NUM_CLASSES == 1 else opt.MODEL.NUM_CLASSES
         
         # Resume모드일 땐 기존 avg를 이어서 사용하기 때문에 interval=1 로 시작
         self.interval = 0 if opt.MODEL.RESUME_PATH is None else 1
@@ -25,23 +26,25 @@ class MetricTracker():
         self.avg      = {m:0 for m in opt.CHECKPOINT.METRICS}
 
         # metric_classes = 2 if opt.MODEL.NUM_CLASSES == 1 else opt.MODEL.NUM_CLASSES
-        self.total_area_intersect = torch.zeros((self.num_classes, ), dtype=torch.float64)
-        self.total_area_pred      = torch.zeros((self.num_classes, ), dtype=torch.float64)
-        self.total_area_label     = torch.zeros((self.num_classes, ), dtype=torch.float64)
-        self.total_area_union     = torch.zeros((self.num_classes, ), dtype=torch.float64)
+        n_classes = 2 if self.num_classes == 1 else self.num_classes
+        self.total_area_intersect = torch.zeros((n_classes, ), dtype=torch.float64)
+        self.total_area_pred      = torch.zeros((n_classes, ), dtype=torch.float64)
+        self.total_area_label     = torch.zeros((n_classes, ), dtype=torch.float64)
+        self.total_area_union     = torch.zeros((n_classes, ), dtype=torch.float64)
         
         self.result = {m:0 for m in opt.CHECKPOINT.METRICS}
 
     def get2(self, output, label, rank):
         output, label = self._preprocessing_inputs(output, label)
         
-        if self.num_classes == 2: # Sigmoid
+        if self.num_classes == 1: # Sigmoid
             pred = (torch.sigmoid(output) > self.opt.CHECKPOINT.THRESHOLD).float()
+            area_intersect, area_pred, area_label, area_union \
+            = intersect_and_union(pred, label, self.num_classes+1) # [background, foreground]
         else: 
             pred = torch.argmax(output, dim=1)
-
-        area_intersect, area_pred, area_label, area_union \
-        = intersect_and_union(pred, label, self.num_classes)
+            area_intersect, area_pred, area_label, area_union \
+            = intersect_and_union(pred, label, self.num_classes)
         
         dist.all_reduce(area_intersect.to(rank), op=dist.ReduceOp.SUM)
         dist.all_reduce(area_pred.to(rank), op=dist.ReduceOp.SUM)
@@ -55,10 +58,12 @@ class MetricTracker():
 
         for metric in self.metrics:
             if metric == 'mIoU':
+                 # tensor([score1, score2, ...])
                 score = self.total_area_intersect / self.total_area_union
                 self.result[metric] = score[1].item()
                 # self.result[metric] = score[1].item() # 수정 필요
             elif metric == 'mDice':
+                # tensor([score1, score2, ...])
                 score = (2*self.total_area_intersect + 1) / (self.total_area_pred + self.total_area_label + 1)
                 self.result[metric] = score[1].item()
                 # self.result[metric] = score # 수정 필요
@@ -116,7 +121,7 @@ class MetricTracker():
         """To make same attribute about 'output' and 'label' data
 
         Args:
-        output (ndarray | Tensor, [B, C]): Array of prediction segmentation maps with class index.
+        output (ndarray | Tensor, [B, C, H, W]): Array of prediction segmentation maps with class index.
         label (ndarray | Tensor): Array of GT segmentation maps with class index.
 
         Returns:
@@ -126,6 +131,8 @@ class MetricTracker():
         # To make same attribute about 'output' and 'label' data
         # CPU/GPU, shape, types, etc
 
+        # Usually Output of model should be list (ex. [feature1, feature2, output])
+        # So list elements will be last output of model
         if isinstance(output, list):
             output = output[-1]
         if isinstance(label, list):
@@ -134,8 +141,8 @@ class MetricTracker():
         output = output.detach().cpu()
         label = label.detach().cpu()
         
-        if (self.num_classes == 2) and (output.dim() == 4):
-            output = output.squeeze(1) 
+        if (self.num_classes == 1) and (output.dim() == 4):
+            output = output.squeeze(1)
 
         return output, label
 

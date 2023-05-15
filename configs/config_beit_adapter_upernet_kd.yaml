@@ -1,11 +1,11 @@
 EXP:
-  EXP_NAME: KD_test
+  EXP_NAME: beit_adapter_KD
   SAVE_DIR: 
 MODEL:
   MODEL_NAME: UperNetKD
   NETWORK_NAME: BEiTAdapterUperNetKD
   TEACHER_NETWORK_NAME: BEiTAdapterUperNet
-  TEACHER_NETWORK_lOAD_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_upernet_best_74000_mDice_0.8116.pth
+  TEACHER_NETWORK_lOAD_PATH: /home/yh.sakong/github/Satellite/exp/beit_adapter_upernet_sn6_pretrained_tif_norm/2023_05_12_02_42/best_74000_mDice_0.8116.pth
   IN_CHANNELS: 4
   NUM_CLASSES: 1
   PRETRAINED_PATH: 
@@ -13,8 +13,8 @@ MODEL:
   LOAD_PATH: 
 DATA:
   DATASET: spacenet6kd
-  TRAIN_DIR: /home/yh.sakong/data/preprocessed/kd/train
-  VAL_DIR: /home/yh.sakong/data/preprocessed/kd/val
+  TRAIN_DIR: /home/yh.sakong/data/sn6_building/preprocessed/kd/train
+  VAL_DIR: /home/yh.sakong/data/sn6_building/preprocessed/kd/val
   TRAIN_BATCH: 2
   VAL_BATCH: 8
   NUM_WORKERS: 0
@@ -26,8 +26,8 @@ DATA:
 #   NUM_WORKERS: 1
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 10
-  LOG_INTERVAL: 1
+  VAL_INTERVAL: 2000
+  LOG_INTERVAL: 500
 CHECKPOINT:
   METRICS:
   - mDice

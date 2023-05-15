@@ -1,11 +1,11 @@
 EXP:
-  EXP_NAME: test
+  EXP_NAME: beit_adapter_upernet_sn6_1chans
   SAVE_DIR: 
 MODEL:
   MODEL_NAME: UperNet
   NETWORK_NAME: BEiTAdapterUperNet
   IN_CHANNELS: 4
-  NUM_CLASSES: 2
+  NUM_CLASSES: 1
   PRETRAINED_PATH: 
   RESUME_PATH: null
   LOAD_PATH: 
@@ -13,8 +13,8 @@ DATA:
   DATASET: spacenet6optical
   TRAIN_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/train'
   VAL_DIR: '/home/yh.sakong/data/sn6_building/preprocessed/optical/val'
-  TRAIN_BATCH: 8
-  VAL_BATCH: 2
+  TRAIN_BATCH: 2
+  VAL_BATCH: 16
   NUM_WORKERS: 0
 # TEST:
 #   DATASET: spacenet6optical
@@ -24,8 +24,8 @@ DATA:
 #   NUM_WORKERS: 1
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 2000 # 2000
-  LOG_INTERVAL: 500 # 500
+  VAL_INTERVAL: 2000
+  LOG_INTERVAL: 500
 CHECKPOINT:
   METRICS:
   - mDice

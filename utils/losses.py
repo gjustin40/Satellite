@@ -58,7 +58,11 @@ class CrossEntropyLoss(nn.Module):
 
     def _forward(self, preds, labels):
         # preds in shape [B, C, H, W] and labels in shape [B, H, W]
-        return self.criterion(preds, labels)
+
+        assert preds.dim() == 4, f"The dim of model's output should be 4, current {preds.dim()}"
+        assert labels.dim() == 3, f"The dim of label should be 3, current {labels.dim()}"
+
+        return self.criterion(preds, labels.long())
 
     def forward(self, preds, labels):
         if isinstance(preds, list):

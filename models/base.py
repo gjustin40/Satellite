@@ -55,7 +55,6 @@ class BaseModel(ABC):
             num_classes=self.opt.MODEL.NUM_CLASSES
         )
         # net.apply(self._init_weights)
-        print('aaa')
         if self.opt.MODEL.LOAD_PATH:
             checkpoint = torch.load(self.opt.MODEL.LOAD_PATH, map_location='cpu')
             net.load_state_dict(checkpoint['state_dict'])

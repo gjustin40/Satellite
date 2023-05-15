@@ -10,8 +10,8 @@ def get_network(network_name, in_chans=3, num_classes=1):
     # binary segmentation only support sigmoid activation function
     # num_classes == 1 or 2 should be considered with binary
     # num_classes == 1 or 2 should be 1 channel of ouput
-    if num_classes == 2:
-        num_classes = 1
+    # if num_classes == 2:
+    #     num_classes = 1
 
     net = eval(network_name)(
         in_chans=in_chans,
