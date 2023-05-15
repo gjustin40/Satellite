@@ -21,7 +21,8 @@ warnings.filterwarnings(action='ignore')
 class BEiTAdapter(BEiT):
     def __init__(self, pretrain_size=512, conv_inplane=64, n_points=4, deform_num_heads=6,
                  init_values=0., cffn_ratio=0.25, deform_ratio=1.0, with_cffn=True,
-                 interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [12, 17], [18, 23]], 
+                #  interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [12, 17], [18, 23]], 
+                 interaction_indexes=[[0, 5], [6, 11], [12, 17], [18, 23], [24, 29], [30, 35]], 
                  add_vit_feature=True, with_cp=True, *args, **kwargs):
 
         super().__init__(init_values=init_values, with_cp=with_cp, *args, **kwargs)

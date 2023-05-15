@@ -71,7 +71,8 @@ class BaseModel(ABC):
         net.to(self.rank)
         if self.opt.WORLD_SIZE > 1:
             net = nn.SyncBatchNorm.convert_sync_batchnorm(net)
-            net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=True)
+            # net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=True)
+            net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=False)
         
 
         return net

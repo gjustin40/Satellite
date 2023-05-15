@@ -1,0 +1,47 @@
+EXP:
+  EXP_NAME: test
+  SAVE_DIR: 
+MODEL:
+  MODEL_NAME: UperNetKD
+  NETWORK_NAME: BEiTAdapterUperNetKD
+  TEACHER_NETWORK_NAME: BEiTAdapterUperNet
+  TEACHER_NETWORK_lOAD_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_upernet_best_74000_mDice_0.8116.pth
+  IN_CHANNELS: 4
+  NUM_CLASSES: 1
+  PRETRAINED_PATH: 
+  RESUME_PATH: 
+  LOAD_PATH: 
+DATA:
+  DATASET: spacenet6kd
+  TRAIN_DIR: /home/yh.sakong/data/preprocessed/kd/train
+  VAL_DIR: /home/yh.sakong/data/preprocessed/kd/val
+  TRAIN_BATCH: 1
+  VAL_BATCH: 1
+  NUM_WORKERS: 0
+# TEST:
+#   DATASET: spacenet6optical
+#   TEST_DIR: /home/yh.sakong/data/sn6_building/preprocessed/optical/val
+#   TEST_PATH: /home/yh.sakong/github/Satellite/exp/UperNet-sn6-optical/2023_05_07_10_53/best_24000_Dice_0.7659.pth
+#   TEST_BATCH: 1
+#   NUM_WORKERS: 1
+INTERVAL:
+  MAX_INTERVAL: 80000
+  VAL_INTERVAL: 10
+  LOG_INTERVAL: 1
+CHECKPOINT:
+  METRICS:
+  - mDice
+  BEST_METRIC: mDice
+  THRESHOLD: 0.3
+OPTIM:
+  SCHEDULER: 
+  LR: 2.0e-5
+  WEIGHT_DECAY: 0.05
+  PARAMWISE:
+    NUM_LAYERS: 24
+    LAYER_DECAY_RATE: 0.9
+
+WORLD_SIZE: 2
+ETC: 
+  IMAGE_FOLDER: images
+  LABEL_FOLDER: labels
