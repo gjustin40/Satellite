@@ -186,7 +186,7 @@ def main():
                     if RANK == 0:
                         state = {
                             'interval': interval,
-                            'state_dict': model.net.module.state_dict(),
+                            'state_dict': model.net.module.state_dict() if opt.WORLD_SIZE > 1 else model.net.state_dict(),
                             'optimizer_state_dict': optimizer.state_dict(),
                             'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
                             'metrics': val_avg2

@@ -9,7 +9,7 @@ import numpy as np
 
 from models import get_network
 from datasets import get_dataset
-from utils.metrics import Dice
+from utils.metrics import mDice
 
 # parser = argparse.ArgumentParser(description='Train a segmentor')
 # parser.add_argument('config', help='train config file path')
@@ -22,7 +22,7 @@ from utils.metrics import Dice
 #     opt = yaml.safe_load(f)
 #     opt = EasyDict(opt)
 
-with open('/home/yh.sakong/github/Satellite/configs/config_remove.yaml', "r") as f:
+with open('/home/yh.sakong/github/Satellite/configs/config_beit_adapter_upernet_kd_test.yaml', "r") as f:
     opt = yaml.safe_load(f)
     opt = EasyDict(opt)
 

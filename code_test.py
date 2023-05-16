@@ -3,19 +3,18 @@
 from models.networks import get_network
 import torch
 import time
-torch.cuda.set_device('cuda:1')
+torch.cuda.set_device('cuda:0')
 net = get_network(
-    network_name='BEiTAdapterUperNet',
+    network_name='BEiTAdapterUperNetKD',
     # network_name='UNet',
     in_chans=4,
     num_classes=1
-).to('cuda:1')
+).to('cuda:0')
 
 net.eval()
-data = torch.Tensor(1,4,512,512).to('cuda:1')
+data = torch.Tensor(1,4,512,512).to('cuda:0')
 print(data.shape)
 with torch.no_grad():
-    net(data)
     out = net(data)
 
     # print(len(out))

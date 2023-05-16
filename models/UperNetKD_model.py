@@ -81,7 +81,7 @@ class UperNetKDModel(BaseModel):
         
         net.apply(init_weights)
         
-        return [self._wrap_ddp(teacher_net, find=False), self._wrap_ddp(net, find=True)]
+        return [self._wrap_ddp(teacher_net), self._wrap_ddp(net)]
 
 
     def get_loss(self, output, label):

@@ -67,12 +67,12 @@ class BaseModel(ABC):
         return self._wrap_ddp(net)
     
 
-    def _wrap_ddp(self, net, find=False):
+    def _wrap_ddp(self, net):
         net.to(self.rank)
         if self.opt.WORLD_SIZE > 1:
             net = nn.SyncBatchNorm.convert_sync_batchnorm(net)
-            # net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=True)
-            net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=False, find_unused_parameters=find)
+            net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=True, find_unused_parameters=True)
+            # net = DDP(net, device_ids=[self.rank], output_device=self.rank, static_graph=False, find_unused_parameters=find)
         
 
         return net
