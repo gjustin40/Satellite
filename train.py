@@ -59,6 +59,9 @@ if RANK == 0:
 
 #################### Set configs as EasyDict ####################
 opt = EasyDict(opt)
+if opt.MODEL.IS_RESUME:
+    assert opt.MODEL.PRETRAINED_PATH, 'we need PRETRINED_PATH for resume training.'
+    ddp_print('Resume Training....')
 
 #################### Set random seeds ####################
 set_random_seeds(random_seed=40)
@@ -70,24 +73,29 @@ ddp_print('Number of val images: ', len(val_loader.dataset))
 
 #################### Get Model ####################
 model = get_model(opt)
-# if opt.MODEL.RESUME_PATH:
-#     checkpoint = 
-#     model.
+
 
 #################### Get Optimizers ####################
 params = model.get_params()
 optimizer = optim.AdamW(params)
 scheduler = WarmupPolyLR(optimizer, power=1, max_iter=opt.INTERVAL.MAX_INTERVAL, warmup_iter=1500, warmup='linear')
-
+interval = 0
+if opt.MODEL.IS_RESUME:
+    ddp_print('Ready for Resume....')
+    checkpoint = torch.load(opt.MODEL.PRETRAINED_PATH, map_location='cpu')
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+    interval = checkpoint['interval']
+    model.best = checkpoint['metrics'][opt.CHECKPOINT.BEST_METRIC]
+    
 dist.barrier()
 def main():
     timer = running_time(opt.INTERVAL.MAX_INTERVAL)
 
     train_metric = MetricTracker(opt)
     
-    loss_avg = 0
-    dice_avg = 0
     interval = 0
+    loss_avg = 0
     generator = iter(train_loader) # Iteration based
 
     ddp_print('Start Loop....')
@@ -156,7 +164,6 @@ def main():
                         tbar = val_loader
                     
                     val_metric = MetricTracker(opt)
-                    dice_avg_val = 0
 
                     for idx, data in enumerate(tbar, start=1):
                         if isinstance(data['image'], list):

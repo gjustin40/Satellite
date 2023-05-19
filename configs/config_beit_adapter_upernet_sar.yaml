@@ -8,6 +8,7 @@ MODEL:
   NUM_CLASSES: 1
   PRETRAINED_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_large_patch16_224_pt22k_ft22k_4channels.pth
   RESUME_PATH: null
+  IS_RESUME: 
   LOAD_PATH: 
 DATA:
   DATASET: spacenet6sar

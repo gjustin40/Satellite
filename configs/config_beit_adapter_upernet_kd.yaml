@@ -1,20 +1,20 @@
 EXP:
-  EXP_NAME: beit_adapter_KD_edit
+  EXP_NAME: beit_adapter_KD_edit_resume
   SAVE_DIR: 
 MODEL:
   MODEL_NAME: UperNetKD
   NETWORK_NAME: BEiTAdapterUperNetKD
   TEACHER_NETWORK_NAME: BEiTAdapterUperNet
-  TEACHER_NETWORK_lOAD_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_upernet_best_74000_mDice_0.8116.pth
+  TEACHER_NETWORK_lOAD_PATH: /home/yh.sakong/github/Satellite/exp/beit_adapter_upernet_sn6_pretrained_tif_norm/2023_05_12_02_42/best_74000_mDice_0.8116.pth
   IN_CHANNELS: 4
   NUM_CLASSES: 1
   PRETRAINED_PATH: 
-  RESUME_PATH: 
   LOAD_PATH: 
+  IS_RESUME: False # True or False -> we need PRETRAINED_PATH
 DATA:
   DATASET: spacenet6kd
-  TRAIN_DIR: /home/yh.sakong/data/preprocessed/kd/train
-  VAL_DIR: /home/yh.sakong/data/preprocessed/kd/val
+  TRAIN_DIR: /home/yh.sakong/data/sn6_building/preprocessed/kd/train
+  VAL_DIR: /home/yh.sakong/data/sn6_building/preprocessed/kd/val
   TRAIN_BATCH: 4
   VAL_BATCH: 8
   NUM_WORKERS: 0
@@ -35,7 +35,7 @@ CHECKPOINT:
   THRESHOLD: 0.3
 OPTIM:
   SCHEDULER: 
-  LR: 2.0e-5
+  LR: 6.0e-5
   WEIGHT_DECAY: 0.05
   PARAMWISE:
     NUM_LAYERS: 24

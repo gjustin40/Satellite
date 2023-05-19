@@ -21,7 +21,7 @@ class MetricTracker():
         # self.num_classes = 2 if opt.MODEL.NUM_CLASSES == 1 else opt.MODEL.NUM_CLASSES
         
         # Resume모드일 땐 기존 avg를 이어서 사용하기 때문에 interval=1 로 시작
-        self.interval = 0 if opt.MODEL.RESUME_PATH is None else 1
+        # self.interval = 0 if opt.MODEL.RESUME_PATH is None else 1
         self.sum      = {m:0 for m in opt.CHECKPOINT.METRICS}
         self.avg      = {m:0 for m in opt.CHECKPOINT.METRICS}
 
@@ -70,20 +70,7 @@ class MetricTracker():
 
         # 수정 필요
         return self.result
-            
-    # def get(self, output, target, rank):
 
-    #     self.interval += 1
-
-    #     pred = (torch.sigmoid(output[-1].cpu()) > self.opt.CHECKPOINT.THRESHOLD).float()
-    #     for metric in self.metrics:
-    #         score = eval(metric)(pred, target).to(rank) # 각 Metric별 score 계산
-    #         dist.all_reduce(score, op=dist.ReduceOp.SUM) # Multi-GPU 결과 합산
-
-    #         self.sum[metric] += (score / self.opt.WORLD_SIZE).item()
-    #         self.avg[metric] = self.sum[metric] / self.interval
-
-    #     return self.avg
 
     def get(self, output, target, rank):
         """

@@ -85,7 +85,6 @@ class UperNetKDModel(BaseModel):
             net.load_state_dict(checkpoint['state_dict'])
             if self.rank == 0:
                 print('Loading pretrained Model checkpoint.....')
-
         return [self._wrap_ddp(teacher_net), self._wrap_ddp(net)]
 
 
@@ -157,7 +156,7 @@ class UperNetKDModel(BaseModel):
 
         return loss
 
-    # def get_params(self):
-    #     return layer_decay_optimizer_constructor(self.opt, self.net)
+    def get_params(self):
+        return layer_decay_optimizer_constructor(self.opt, self.net)
 
     # def predict(self, output, label)

@@ -41,9 +41,13 @@ class UperNetModel(BaseModel):
             net.load_state_dict(checkpoint['state_dict'])
             if self.rank == 0:
                 print('Loading checkpoint.....')
-                
-        if self.opt.MODEL.PRETRAINED_PATH:
-            net = load_pretrained_weight(net, self.opt.MODEL.PRETRAINED_PATH)
+           
+        elif self.opt.MODEL.PRETRAINED_PATH:
+            if self.opt.MODEL.IS_RESUME:
+                checkpoint = torch.load(self.opt.MODEL.PRETRAINED_PATH)
+                net.load_state_dict(checkpoint['state_dict'])
+            else:
+                net = load_pretrained_weight(net, self.opt.MODEL.PRETRAINED_PATH)
         
         return self._wrap_ddp(net)
 
