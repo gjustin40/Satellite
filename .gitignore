@@ -6,5 +6,6 @@
 *.ipynb
 *.tif
 *.tiff
+configs/*
 exp/*
 고려사항.txt
