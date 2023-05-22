@@ -54,8 +54,12 @@ def get_dataset(opt):
 
     trainset = datasets_dict[opt.DATA.DATASET](train_dir, transform_train)
     valset = datasets_dict[opt.DATA.DATASET](val_dir, transform_val)
-    train_sampler = DistributedSampler(trainset, num_replicas=opt.WORLD_SIZE, drop_last=False)
-    val_sampler = DistributedSampler(valset, num_replicas=opt.WORLD_SIZE, drop_last=False)
+    if dist.is_available() and dist.is_initialized():
+        train_sampler = DistributedSampler(trainset, num_replicas=opt.WORLD_SIZE, drop_last=False)
+        val_sampler = DistributedSampler(valset, num_replicas=opt.WORLD_SIZE, drop_last=False)
+    else:
+        train_sampler = None
+        val_sampler = None
     train_loader = DataLoader(trainset, batch_size=opt.DATA.TRAIN_BATCH, shuffle=False, num_workers=opt.DATA.NUM_WORKERS, sampler=train_sampler, pin_memory=True)
     val_loader = DataLoader(valset, batch_size=opt.DATA.VAL_BATCH, shuffle=False, num_workers=opt.DATA.NUM_WORKERS, sampler=val_sampler, pin_memory=True)
     

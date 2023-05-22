@@ -9,7 +9,7 @@ MODEL:
   IN_CHANNELS: 4
   NUM_CLASSES: 1
   PRETRAINED_PATH: 
-  LOAD_PATH: 
+  LOAD_PATH: /home/yh.sakong/github/Satellite/exp/beit_adapter_KD_edit_resume/2023_05_20_10_35/best_30000_mDice_0.6375.pth
   IS_RESUME: False # True or False -> we need PRETRAINED_PATH
 DATA:
   DATASET: spacenet6kd
@@ -26,8 +26,8 @@ DATA:
 #   NUM_WORKERS: 1
 INTERVAL:
   MAX_INTERVAL: 80000
-  VAL_INTERVAL: 2000 # 2000
-  LOG_INTERVAL: 500 # 500
+  VAL_INTERVAL: 500 # 2000
+  LOG_INTERVAL: 250 # 500
 CHECKPOINT:
   METRICS:
   - mDice
@@ -35,7 +35,7 @@ CHECKPOINT:
   THRESHOLD: 0.3
 OPTIM:
   SCHEDULER: 
-  LR: 2.0e-5
+  LR: 4.0e-6
   WEIGHT_DECAY: 0.05
   PARAMWISE:
     NUM_LAYERS: 24

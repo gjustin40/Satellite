@@ -77,7 +77,7 @@ model = get_model(opt)
 
 #################### Get Optimizers ####################
 params = model.get_params()
-optimizer = optim.AdamW(params)
+optimizer = optim.AdamW(params, lr=opt.OPTIM.LR, weight_decay=opt.OPTIM.WEIGHT_DECAY)
 scheduler = WarmupPolyLR(optimizer, power=1, max_iter=opt.INTERVAL.MAX_INTERVAL, warmup_iter=1500, warmup='linear')
 interval = 0
 if opt.MODEL.IS_RESUME:

@@ -86,6 +86,12 @@ class UperNetKDModel(BaseModel):
             if self.rank == 0:
                 print('Loading pretrained Model checkpoint.....')
 
+        if self.opt.MODEL.LOAD_PATH:
+            checkpoint = torch.load(self.opt.MODEL.LOAD_PATH, map_location='cpu')
+            net.load_state_dict(checkpoint['state_dict'])
+            if self.rank == 0:
+                print('Loading checkpoint.....')
+                
         return [self._wrap_ddp(teacher_net), self._wrap_ddp(net)]
 
 

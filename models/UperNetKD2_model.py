@@ -5,7 +5,10 @@ from utils import *
 import segmentation_models_pytorch as smp
 import torch.nn as nn
 
-class UperNetKDModel(BaseModel):
+"""Description About UperNetKD2 Model
+
+"""
+class UperNetKD2Model(BaseModel):
     def __init__(self, opt):
         super(UperNetKDModel, self).__init__(opt=opt)
         self.teacher_net, self.net = self._get_network()
@@ -156,7 +159,7 @@ class UperNetKDModel(BaseModel):
 
         return loss
 
-    def get_params(self):
-        return layer_decay_optimizer_constructor(self.opt, self.net)
+    # def get_params(self):
+    #     return layer_decay_optimizer_constructor(self.opt, self.net)
 
     # def predict(self, output, label)
