@@ -10,12 +10,13 @@ import torch.nn as nn
 """
 class UperNetKD2Model(BaseModel):
     def __init__(self, opt):
-        super(UperNetKDModel, self).__init__(opt=opt)
+        super(UperNetKD2Model, self).__init__(opt=opt)
         self.teacher_net, self.net = self._get_network()
         
         # Loss Functions
-        self.loss_bce = BCELoss()
+        self.loss_CE = CrossEntropyLoss()
         self.loss_mse = MSELoss()
+        self.pixelwise = CriterionPixelWise()
 
         # Metric Functions
 
@@ -94,12 +95,15 @@ class UperNetKD2Model(BaseModel):
     def get_loss(self, output, label):
         # [[4], [4], [4], 1, 1, 1, 1, 1]
 
+        ########## label
+        # torch.Size([1, 1, 512, 512])
+
         ########## output list
         # [0] GT of teacher net, list
         # torch.Size([1, 1024, 32, 32]) # 1/16
         # torch.Size([1, 1024, 16, 16]) # 1/32
         # torch.Size([1, 1024, 128, 128]) # 1/32
-        # torch.Size([1, 1, 512, 512]) # 1/1
+        # torch.Size([1, 2, 512, 512]) # 1/1
 
         # [1] opt branch features, list
         # torch.Size([1, 1024, 32, 32]) # 1/16 -- use
@@ -115,13 +119,13 @@ class UperNetKD2Model(BaseModel):
         # torch.Size([1, 1024, 128, 128])
 
         # [4] opt branch output, tensor
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
         # [5] sar branch output, tensor
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
         # [6] combine output, tensor
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
 
 
@@ -141,15 +145,15 @@ class UperNetKD2Model(BaseModel):
 
 
         # 1. sar branch output loss
-        sar_output_loss = self.loss_bce(output[5], label)
+        sar_output_loss = self.loss_CE(output[5], label)
 
         # 2. opt branch output loss (distillation)
-        teacher_pred = (torch.sigmoid(output[0][-1]) > self.opt.CHECKPOINT.THRESHOLD).float()
-        opt_output_loss_logit = self.loss_bce(torch.sigmoid(output[4]), teacher_pred)
-        opt_output_loss       = self.loss_bce(torch.sigmoid(output[4]), torch.sigmoid(output[0][-1]))
+        teacher_pred = torch.argmax(output[0][-1], dim=1)
+        opt_output_loss_logit = self.loss_CE(output[4], teacher_pred.detach())
+        opt_output_loss       = self.pixelwise(output[4], output[0][-1])
         
         # 3. fused loss
-        fused_loss = self.loss_bce(output[6], label)
+        fused_loss = self.loss_CE(output[6], label)
 
         # 4. opt branch features loss (3 maps = features 2 + decode 1)
         dist_list = output[1] + [output[3]]

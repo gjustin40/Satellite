@@ -59,6 +59,8 @@ class CrossEntropyLoss(nn.Module):
     def _forward(self, preds, labels):
         # preds in shape [B, C, H, W] and labels in shape [B, H, W]
 
+        if (preds.dim() == 4) and (labels.dim() == 4):
+            labels = labels.squeeze(1)
         assert preds.dim() == 4, f"The dim of model's output should be 4, current {preds.dim()}"
         assert labels.dim() == 3, f"The dim of label should be 3, current {labels.dim()}"
 
@@ -130,7 +132,25 @@ class DiceLoss(nn.Module):
             return sum([w * self._forward(pred, labels) for (pred, w) in zip(preds, self.aux_weights)])
         return self._forward(preds, labels)
 
+class CriterionPixelWise(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # self.ignore_index = ignore_index
+        # self.criterion = torch.nn.CrossEntropyLoss(ignore_index=ignore_index, reduce=reduce)
+        # if not reduce:
+        #     print("disabled the reduce.")
 
+    def forward(self, preds_S, preds_T):
+        # preds_T[0] is the seg logit
+        preds_T.detach()
+        assert preds_S.shape == preds_T.shape,'the output dim of teacher and student differ'
+        N,C,W,H = preds_S.shape
+        softmax_pred_T = F.softmax(preds_T.permute(0,2,3,1).contiguous().view(-1,C), dim=1)
+        logsoftmax = nn.LogSoftmax(dim=1)
+        loss = (torch.sum( - softmax_pred_T * logsoftmax(preds_S.permute(0,2,3,1).contiguous().view(-1,C))))/W/H
+        return loss
+
+        
 if __name__ == '__main__':
     fn = DiceLoss()
     inp = torch.randn(1,1,512,512)
