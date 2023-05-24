@@ -16,6 +16,8 @@ DATA:
   TRAIN_BATCH: 2
   VAL_BATCH: 16
   NUM_WORKERS: 0
+  MEAN: [123.675, 116.28, 116.28, 103.53]
+  STD: [58.395, 57.12, 57.12, 57.375]
 # TEST:
 #   DATASET: spacenet6optical
 #   TEST_DIR: /home/yh.sakong/data/sn6_building/preprocessed/optical/val

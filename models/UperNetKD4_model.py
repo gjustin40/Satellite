@@ -111,7 +111,7 @@ class UperNetKD4Model(BaseModel):
         # [[6], 6]
         T_features, S_features = output[0][:4], output[1:5]
         T_output, S_output = output[0][-1], output[-1]
-
+        
         # pair_loss = sum([self.loss_pairwise(s, t)  for s, t in zip(S_features, T_features)])
         # pixel_loss = self.loss_pixelwise(S_output, T_output)
         gt_loss = self.loss_CE(S_output, label)

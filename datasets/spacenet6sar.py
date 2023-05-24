@@ -40,11 +40,11 @@ class SpaceNet6SAR(Dataset):
 
         augmentations = self.transform(image=image, mask=mask)
         image = augmentations['image'].float()
-        mask = augmentations['mask'].long()
+        mask = augmentations['mask'].float()
 
         data = {
-            'image': image.float(),
-            'label': mask.float(),
+            'image': image,
+            'label': mask,
             'image_path': image_path
         }
 

@@ -37,7 +37,7 @@ class UperNetKD2Model(BaseModel):
         # torch.Size([1, 1024, 32, 32]) # 1/16 feature 3
         # torch.Size([1, 1024, 16, 16]) # 1/32 feature 4
         # torch.Size([1, 1024, 128, 128]) # decode
-        # torch.Size([1, 1, 512, 512]) # 1/1 (B, C, 512, 512) # out
+        # torch.Size([1, 2, 512, 512]) # 1/1 (B, C, 512, 512) # out
 
 
         # output of net
@@ -55,13 +55,13 @@ class UperNetKD2Model(BaseModel):
         # torch.Size([1, 1024, 128, 128])
 
         # out_opt : output of optical branch [B, C, H, W]
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
         # out_sar : output of sar branch [B, C, H, W]
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
         # out_combine : output of net which is goal
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 2, 512, 512])
 
         # [[4], [4], [4], 1, 1, 1, 1]
 
