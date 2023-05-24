@@ -96,7 +96,7 @@ class UperNetKD2Model(BaseModel):
         # [[4], [4], [4], 1, 1, 1, 1, 1]
 
         ########## label
-        # torch.Size([1, 1, 512, 512])
+        # torch.Size([1, 512, 512])
 
         ########## output list
         # [0] GT of teacher net, list
@@ -151,15 +151,44 @@ class UperNetKD2Model(BaseModel):
         teacher_pred = torch.argmax(output[0][-1], dim=1)
         opt_output_loss_logit = self.loss_CE(output[4], teacher_pred.detach())
         opt_output_loss       = self.pixelwise(output[4], output[0][-1])
-        
+
         # 3. fused loss
         fused_loss = self.loss_CE(output[6], label)
 
         # 4. opt branch features loss (3 maps = features 2 + decode 1)
         dist_list = output[1] + [output[3]]
         opt_dis_loss = sum([self.loss_mse(opt_f, teacher_f) for opt_f, teacher_f in zip(dist_list, output[0][:3])])
-
         loss = sar_output_loss + opt_output_loss_logit + opt_output_loss + fused_loss + opt_dis_loss / len(dist_list)
+
+        # Debug shape of outputs
+        # if self.rank == 0:
+        #     print('------------------Start---------------------')
+        #     print('self.loss_CE')
+        #     print('ouput[5]', output[5].shape)
+        #     print('label', label.shape)
+        #     print('-------------')
+
+        #     print('torch.argmax')
+        #     print('output[0][-1]', output[0][-1].shape)
+        #     print('--------------')
+
+        #     print('self.loss_CE')
+        #     print('output[4]', output[4].shape)
+        #     print('teacher_pred.detach()', teacher_pred.detach().shape)
+        #     print('--------------')
+
+        #     print('self.pixelwise')
+        #     print('output[4]', output[4].shape)
+        #     print('output[0][-1]', output[0][-1].shape)
+
+        #     print('self.loss_CE')
+        #     print('output[6]', output[6].shape)
+        #     print('label', label.shape)
+        #     print('------------')
+
+        #     print('self.loss_mse')
+        #     for a,b in zip(dist_list, output[0][:3]):
+        #         print('op_f / teacher_f', a.shape, b.shape)
 
         return loss
 

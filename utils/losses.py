@@ -150,7 +150,41 @@ class CriterionPixelWise(nn.Module):
         loss = (torch.sum( - softmax_pred_T * logsoftmax(preds_S.permute(0,2,3,1).contiguous().view(-1,C))))/W/H
         return loss
 
+
+class CriterionPairWise(nn.Module):
+    def __init__(self, scale=0.5):
+        '''inter pair-wise loss from inter feature maps'''
+        super(CriterionPairWise, self).__init__()
+        self.criterion = self.sim_dis_compute
+        self.scale = scale
+
+    def L2(self, f_):
+        return (((f_**2).sum(dim=1))**0.5).reshape(f_.shape[0],1,f_.shape[2],f_.shape[3]) + 1e-8
+
+    def similarity(self, feat):
+        feat = feat.float()
+        tmp = self.L2(feat).detach()
+        feat = feat/tmp
+        feat = feat.reshape(feat.shape[0],feat.shape[1],-1)
+        return torch.einsum('icm,icn->imn', [feat, feat])
+
+    def sim_dis_compute(self, f_S, f_T):
+        sim_err = ((self.similarity(f_T) - self.similarity(f_S))**2)/((f_T.shape[-1]*f_T.shape[-2])**2)/f_T.shape[0]
+        sim_dis = sim_err.sum()
+        return sim_dis
+
+    def forward(self, preds_S, preds_T):
+        assert preds_S.shape == preds_T.shape, 'Studnet and Teacher output shape should be same'
         
+        preds_T.detach()
+
+        total_w, total_h = preds_T.shape[2], preds_T.shape[3]
+        patch_w, patch_h = int(total_w*self.scale), int(total_h*self.scale)
+        maxpool = nn.MaxPool2d(kernel_size=(patch_w, patch_h), stride=(patch_w, patch_h), padding=0, ceil_mode=True) # change
+        loss = self.criterion(maxpool(preds_S), maxpool(preds_T))
+        return loss
+
+
 if __name__ == '__main__':
     fn = DiceLoss()
     inp = torch.randn(1,1,512,512)
