@@ -13,6 +13,9 @@ from easydict import EasyDict
 import numpy as np
 from tqdm import tqdm
 
+import wandb
+from wandb import AlertLevel
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -57,10 +60,22 @@ if RANK == 0:
         yaml.dump(opt, f, sort_keys=False)
 
 #################### Set configs as EasyDict ####################
+# EasyDict을 여기서 사용한 이유는 yaml을 저장할 easydict으로 저장하면 이상한 것들도 같이 저장돼서...
 opt = EasyDict(opt)
 if opt.MODEL.IS_RESUME:
     assert opt.MODEL.PRETRAINED_PATH, 'we need PRETRINED_PATH for resume training.'
     ddp_print('Resume Training....')
+
+#################### Set WandDB ####################
+if RANK == 0:
+    wandb.login()
+    wandb.init(
+        project="SpaceNet6-Distillation",
+        config=opt,
+        name=f'{opt.EXP.EXP_NAME}_{t}',
+        dir=SAVE_DIR
+        )
+dist.barrier()
 
 #################### Set random seeds ####################
 set_random_seeds(random_seed=40)
@@ -79,7 +94,8 @@ if RANK == 0:
         f'{SAVE_DIR}/{opt.MODEL.MODEL_NAME}_model.py'
     )    
     print(f"Log and Checkpoint will be saved '{SAVE_DIR}' \n")
-    
+    wandb.watch(model.net.module) # # Wandb Logging
+
 #################### Get Optimizers ####################
 params = model.get_params()
 optimizer = optim.AdamW(params, lr=opt.OPTIM.LR, weight_decay=opt.OPTIM.WEIGHT_DECAY)
@@ -132,12 +148,21 @@ def main():
             loss_avg += (loss.item() / opt.WORLD_SIZE)
 
             # train_avg = train_metric.get(output, label.cpu(), RANK)
-            train_avg2 = train_metric.get2(output, label, RANK)
+            train_avg = train_metric.get(output, label, RANK)
 
             dist.barrier()
             
             ###################### Logging ######################
             if RANK == 0:
+
+                # Wandb Logging
+                w_log = {
+                    'LR': current_lr,
+                    'Train_loss': loss_avg/interval,
+                }
+                w_log.update([(f'Train_{m}', s) for m,s in train_avg.items()])
+                wandb.log(w_log)
+
                 if (((interval % opt.INTERVAL.LOG_INTERVAL) == 0) or (interval == opt.INTERVAL.MAX_INTERVAL)):
                     timer.end_t = time.time()
                     interval_time, eta = timer.predict(interval)
@@ -147,9 +172,10 @@ def main():
                         f'LR: {current_lr:.8e} | '
                         f'Loss: {loss_avg/interval:.4f} | '
                         # f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg.items()])} | '
-                        f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg2.items()])} | '
+                        f'{" | ".join([f"{m}: {s:.4f}" for m, s in train_avg.items()])} | '
                         f'Time: {interval_time} | '
-                        f'ETA: {eta}'
+                        f'ETA: {eta} | '
+                        f'{time.strftime("%m%d %H:%M", time.localtime(time.time()))}'
                     )
                     print(msg)
                     logger.train.info(msg)
@@ -180,30 +206,43 @@ def main():
 
                         output = model.forward(image)
 
-                        # val_avg = val_metric.get(output, label, RANK)
-                        val_avg2 = val_metric.get2(output, label, RANK)
-
+                        val_avg = val_metric.get(output, label, RANK)
                         if RANK == 0:
                             ###################### Logging ######################
                             msg = (
                                 f'[{interval:6d}/{opt.INTERVAL.MAX_INTERVAL}] | '
                                 f'Validation | '
-                                # f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg.items()])} | '
-                                f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg2.items()])} | '
+                                f'{" | ".join([f"{m}: {s:.4f}" for m, s in val_avg.items()])} | '
                             )
                             tbar.set_description(msg)
                             if idx == len(val_loader):
                                 logger.val.info(msg)                 
                     
                     if RANK == 0:
+                        # Wandb Logging
+                        wandb.log({f'Val_{m}':s for m,s in val_avg.items()})
+                        if model.best < val_avg[opt.CHECKPOINT.BEST_METRIC]:
+                            alert = (
+                                f"Metric: {opt.CHECKPOINT.BEST_METRIC} | "
+                                f"{model.best:0.4f} -> {val_avg[opt.CHECKPOINT.BEST_METRIC]:0.4f}"
+                                )
+                            print('alert')
+                            wandb.alert(
+                                title=f'Metric Update {interval}',
+                                text=alert,
+                                level=AlertLevel.INFO)
+
+                        # Checkpoint
                         state = {
                             'interval': interval,
                             'state_dict': model.net.module.state_dict() if opt.WORLD_SIZE > 1 else model.net.state_dict(),
                             'optimizer_state_dict': optimizer.state_dict(),
                             'scheduler_state_dict': scheduler.state_dict() if scheduler is not None else None,
-                            'metrics': val_avg2
+                            'metrics': val_avg
                         }
                         model.save_checkpoint(state)
+
+                        
 
                 timer.start_t = time.time()
 

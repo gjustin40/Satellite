@@ -7,6 +7,13 @@ import torch.nn.functional as F
 import wandb
 import torch
 import torch.nn as nn
+from datetime import timedelta
+import wandb
+from wandb import AlertLevel
+
+import numpy as np
+
+
 
 class YourModel(nn.Module):
     def __init__(self):
@@ -31,17 +38,26 @@ class YourModel(nn.Module):
 wandb.login()
 
 # Initialize a new run
-wandb.init(project="pytorch_cifar10")
+wandb.init(
+    project="pytorch_cifar10",
+    config=None,
+    name='justin',
+    dir=None
+    )
 
 # Set up the CIFAR-10 dataset and data loader
 transform = transforms.Compose(
     [transforms.RandomHorizontalFlip(),
      transforms.RandomCrop(32, padding=4),
-     transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+     transforms.ToTensor()])
 
+val_transform = transforms.Compose(
+    [transforms.ToTensor()])
+     
 trainset = torchvision.datasets.CIFAR10(root='./remove/data', train=True, download=True, transform=transform)
+valset = torchvision.datasets.CIFAR10(root='./remove/data', train=False, download=True, transform=val_transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=100, shuffle=True, num_workers=2)
+valloader = torch.utils.data.DataLoader(valset, batch_size=100, shuffle=False, num_workers=4)
 
 # Define your model, loss function, and optimizer
 model = YourModel() # Replace with your model
@@ -54,22 +70,43 @@ wandb.watch(model)
 
 # Train the model
 num_epochs = 10
+examples = []
 for epoch in range(num_epochs):
     running_loss = 0.0
+    running_acc = 0.0
+    total = 0
     for i, (inputs, labels) in enumerate(trainloader):
+        total += inputs.shape[0]
         inputs, labels = inputs.to('cuda:0'), labels.to('cuda:0')
         optimizer.zero_grad()
 
         outputs = model(inputs)
         loss = criterion(outputs, labels)
+        pred = torch.argmax(outputs.detach().cpu(), dim=1)
+        running_acc += (pred == labels.cpu()).sum()
         loss.backward()
         optimizer.step()
-
+    
         running_loss += loss.item()
     
     # Log metrics after each epoch
-    wandb.log({"epoch_loss": running_loss / (i+1)})
 
+
+    image = wandb.Image(np.array(inputs.cpu()[0].permute(1,2,0)), caption=f"random field {epoch}")
+    examples.append(image)
+    wandb.log({
+        "epoch_loss": running_loss / (i+1),
+        "epoch_acc" : running_acc / total,
+        "example" : examples
+    })
+    if (running_acc / total) > 0.2:
+        wandb.alert(
+            title=f'accuracy_{epoch}',
+            text=f'Accuracy {running_acc / total} is got to 0.2',
+            level=AlertLevel.INFO,
+            # wait_duration=timedelta(seconds=5)
+        )
+    print(f'Epoch loss: {running_loss:0.4f} | Epoch Acc: {running_acc / total:0.4f}')
 # Save the trained model and finish the run
 torch.save(model.state_dict(), "./remove/cifar10_model.pth")
 wandb.save("./remove/cifar10_model.pth")
