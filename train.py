@@ -6,6 +6,7 @@ import random
 import datetime
 import argparse
 import yaml
+import shutil
 from yaml.loader import SafeLoader
 from easydict import EasyDict
 
@@ -54,8 +55,6 @@ if RANK == 0:
     logger = Logger(opt['EXP']['EXP_NAME'], log_path=SAVE_DIR)
     with open(f'{SAVE_DIR}/{opt["EXP"]["EXP_NAME"]}.yaml', 'w') as f:
         yaml.dump(opt, f, sort_keys=False)
-        
-    print(f"Log and Checkpoint will be saved '{SAVE_DIR}' \n")
 
 #################### Set configs as EasyDict ####################
 opt = EasyDict(opt)
@@ -73,8 +72,14 @@ ddp_print('Number of val images: ', len(val_loader.dataset))
 
 #################### Get Model ####################
 model = get_model(opt)
-
-
+if RANK == 0:
+    # save model.py
+    shutil.copyfile(
+        f'./models/{opt.MODEL.MODEL_NAME}_model.py',
+        f'{SAVE_DIR}/{opt.MODEL.MODEL_NAME}_model.py'
+    )    
+    print(f"Log and Checkpoint will be saved '{SAVE_DIR}' \n")
+    
 #################### Get Optimizers ####################
 params = model.get_params()
 optimizer = optim.AdamW(params, lr=opt.OPTIM.LR, weight_decay=opt.OPTIM.WEIGHT_DECAY)
