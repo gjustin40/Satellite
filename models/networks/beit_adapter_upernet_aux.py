@@ -47,9 +47,9 @@ class BEiTAdapterUperNetAux(nn.Module):
 
         aux_out = self.auxiliary_head(features)
         aux_out = F.interpolate(aux_out, size=x.shape[2:], mode='bilinear', align_corners=False)    # to original image shape
-        out = self.decode_head(features)
+        f, out = self.decode_head(features)
         out = F.interpolate(out, size=x.shape[2:], mode='bilinear', align_corners=False)    # to original image shape
-        out_list = features + [aux_out] + [out]
+        out_list = features + [f] + [aux_out] + [out]
         return out_list
 
 if __name__ == '__main__':
