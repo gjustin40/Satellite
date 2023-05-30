@@ -6,7 +6,7 @@ MODEL:
   NETWORK_NAME: BEiTAdapterUperNet
   IN_CHANNELS: 4
   NUM_CLASSES: 1
-  PRETRAINED_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_large_patch16_224_pt22k_ft22k_4channels.pth
+  PRETRAINED_PATH: /home/yh.sakong/github/Satellite/pretrained/beit_upernet_best_74000_mDice_0.8116.pth
   RESUME_PATH: null
   IS_RESUME: 
   LOAD_PATH: 

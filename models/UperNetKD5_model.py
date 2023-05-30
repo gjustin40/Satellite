@@ -115,7 +115,7 @@ class UperNetKD5Model(BaseModel):
         T_features, S_features = output[0][:4], output[1:5]
         T_output, S_output = output[0][-1], output[-1]
         
-        feature_loss = self.loss_mse(S_features[0], T_features[0])
+        feature_loss = self.loss_mse(S_features[3], T_features[3])
         # feature_loss = sum([self.loss_mse(s, t)  for s, t in zip(S_features, T_features)]) 
         
         # pair_loss = sum([self.loss_pairwise(s, t)  for s, t in zip(S_features, T_features)])
@@ -145,7 +145,7 @@ class UperNetKD5Model(BaseModel):
 
         return loss
 
-    def get_params(self):
-        return layer_decay_optimizer_constructor(self.opt, self.net)
+    # def get_params(self):
+    #     return layer_decay_optimizer_constructor(self.opt, self.net)
 
     # def predict(self, output, label)
